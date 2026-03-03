@@ -1,6 +1,6 @@
 # CyberStrikeAI Robot / Chatbot Guide
 
-[中文](robot.md)
+[English](robot_en.md) | [中文](robot.md) | [Français](robot_fr.md)
 
 This document explains how to chat with CyberStrikeAI from **DingTalk** and **Lark (Feishu)** using long-lived connections—no need to open a browser on the server. Following the steps below helps avoid common mistakes.
 
