@@ -1,157 +1,157 @@
 # ============================================
-# CyberStrikeAI 配置文件
+# Fichier de configuration CyberStrikeAI
 # ============================================
-# 本配置文件支持通过 Web 界面进行可视化配置
-# 点击右上角"设置"按钮即可修改配置
-# ============================================
-
-# ============================================
-# 系统设置
+# Ce fichier de configuration prend en charge la configuration visuelle via l'interface Web
+# Cliquez sur le bouton "Paramètres" en haut à droite pour modifier la configuration
 # ============================================
 
-# 前端显示的版本号（可选，不填则显示默认版本）
+# ============================================
+# Paramètres système
+# ============================================
+
+# Numéro de version affiché dans le front-end (facultatif, affiche la version par défaut si vide)
 version: "v1.3.16"
 
-# 服务器配置
+# Configuration du serveur
 server:
-  host: 0.0.0.0 # 监听地址，0.0.0.0 表示监听所有网络接口
-  port: 8080     # HTTP 服务端口，可通过浏览器访问 http://localhost:8080
+  host: 0.0.0.0 # Adresse d'écoute, 0.0.0.0 signifie écouter sur toutes les interfaces réseau
+  port: 8080     # Port du service HTTP, accessible via un navigateur à http://localhost:8080
 
-# 认证配置
+# Configuration d'authentification
 auth:
-  password:  # Web 登录密码，请修改为强密码
-  session_duration_hours: 12          # 登录有效期（小时），超时后需重新登录
+  password:  # Mot de passe de connexion Web, veuillez le changer pour un mot de passe fort
+  session_duration_hours: 12          # Durée de validité de la connexion (heures), reconnexion nécessaire après expiration
 
-# 日志配置
+# Configuration des journaux
 log:
-  level: info   # 日志级别: debug(调试), info(信息), warn(警告), error(错误)
-  output: stdout # 日志输出位置: stdout(标准输出), stderr(标准错误), 或文件路径
+  level: info   # Niveau de journalisation: debug(débogage), info(information), warn(avertissement), error(erreur)
+  output: stdout # Destination de sortie des journaux: stdout(sortie standard), stderr(erreur standard), ou chemin de fichier
 
 # ============================================
-# 对话相关配置
+# Configuration liée aux conversations
 # ============================================
 
-# AI 模型配置（支持 OpenAI 兼容 API）
-# 必填项：api_key, base_url, model 必须填写才能正常运行
-# 支持的 API 服务商：
+# Configuration du modèle IA (prend en charge l'API compatible OpenAI)
+# Champs obligatoires: api_key, base_url, model doivent être remplis pour un fonctionnement normal
+# Fournisseurs de services API pris en charge:
 #   - OpenAI: https://api.openai.com/v1
 #   - DeepSeek: https://api.deepseek.com/v1
-#   - 其他兼容 OpenAI 协议的 API
-# 常用模型: gpt-4, gpt-3.5-turbo, deepseek-chat, claude-3-opus 等
+#   - Autres API compatibles avec le protocole OpenAI
+# Modèles couramment utilisés: gpt-4, gpt-3.5-turbo, deepseek-chat, claude-3-opus, etc.
 openai:
-  base_url: https://api.deepseek.com/v1 # API 基础 URL（必填）
-  api_key: sk-xxxx                       # API 密钥（必填）
-  model: deepseek-chat                   # 模型名称（必填）
-  max_total_tokens: 120000              # LLM 相关上下文的最大 Token 数限制（内存压缩和攻击链构建会共用此配置）
+  base_url: https://api.deepseek.com/v1 # URL de base de l'API (obligatoire)
+  api_key: sk-xxxx                       # Clé API (obligatoire)
+  model: deepseek-chat                   # Nom du modèle (obligatoire)
+  max_total_tokens: 120000              # Limite maximale de tokens pour le contexte lié au LLM (compression de mémoire et construction de chaîne d'attaque partageront cette configuration)
 
 # ============================================
-# 信息收集（FOFA）配置（可选）
+# Configuration de collecte d'informations (FOFA) (facultatif)
 # ============================================
-# 用于「信息收集」页面调用 FOFA API（后端代理，避免前端暴露 key）
-# 也可通过环境变量配置：FOFA_EMAIL / FOFA_API_KEY（优先级更高）
+# Utilisé pour la page « Collecte d'informations » afin d'appeler l'API FOFA (proxy backend, évite l'exposition de la clé côté front-end)
+# Peut également être configuré via des variables d'environnement: FOFA_EMAIL / FOFA_API_KEY (priorité supérieure)
 fofa:
-  base_url: "https://fofa.info/api/v1/search/all" # 可选，留空则使用默认
-  email: ""   # FOFA 账号邮箱（可选，建议在系统设置中填写）
-  api_key: "" # FOFA API Key（可选，建议在系统设置中填写）
+  base_url: "https://fofa.info/api/v1/search/all" # Facultatif, utilise la valeur par défaut si vide
+  email: ""   # Email du compte FOFA (facultatif, recommandé de remplir dans les paramètres système)
+  api_key: "" # Clé API FOFA (facultatif, recommandé de remplir dans les paramètres système)
 
-# Agent 配置
-# 达到最大迭代次数时，AI 会自动总结测试结果
+# Configuration de l'agent
+# Lorsque le nombre maximal d'itérations est atteint, l'IA résumera automatiquement les résultats des tests
 agent:
-  max_iterations: 120           # 最大迭代次数，AI 代理最多执行多少轮工具调用
-  large_result_threshold: 102400 # 大结果阈值（字节），默认50KB，超过此大小会自动保存到存储
-  result_storage_dir: tmp        # 结果存储目录，大结果会保存在此目录下
+  max_iterations: 120           # Nombre maximal d'itérations, maximum de tours d'appels d'outils que l'agent IA peut exécuter
+  large_result_threshold: 102400 # Seuil de grand résultat (octets), par défaut 50KB, sera automatiquement enregistré dans le stockage si dépassé
+  result_storage_dir: tmp        # Répertoire de stockage des résultats, les grands résultats seront enregistrés dans ce répertoire
 
-# 数据库配置
+# Configuration de la base de données
 database:
-  path: data/conversations.db    # SQLite 数据库文件路径，用于存储对话历史和消息
-  knowledge_db_path: data/knowledge.db # 知识库数据库文件路径（可选，为空则使用会话数据库），用于存储知识库项和向量嵌入，可独立复制和复用
+  path: data/conversations.db    # Chemin du fichier de base de données SQLite, utilisé pour stocker l'historique des conversations et les messages
+  knowledge_db_path: data/knowledge.db # Chemin du fichier de base de données de la base de connaissances (facultatif, utilise la base de données de session si vide), utilisé pour stocker les éléments de la base de connaissances et les embeddings vectoriels, peut être copié et réutilisé indépendamment
 
 # ============================================
-# 任务管理相关配置
+# Configuration liée à la gestion des tâches
 # ============================================
-# （配置项已包含在对话相关配置中）
+# (Les éléments de configuration sont inclus dans la configuration liée aux conversations)
 
 # ============================================
-# 漏洞管理相关配置
+# Configuration liée à la gestion des vulnérabilités
 # ============================================
 
-# 安全工具配置
-# 系统会从该目录加载所有 .yaml 格式的工具配置文件
-# 推荐方式：在 tools/ 目录下为每个工具创建独立的配置文件
+# Configuration des outils de sécurité
+# Le système chargera tous les fichiers de configuration d'outils au format .yaml depuis ce répertoire
+# Méthode recommandée: créer un fichier de configuration indépendant pour chaque outil dans le répertoire tools/
 security:
-  tools_dir: tools # 工具配置文件目录（相对于配置文件所在目录）
-  # 工具描述模式：加载 tools 下工具时，暴露给 AI/API 使用的描述来源
-  #   short - 优先使用 short_description（简短描述，省 token），为空时用 description
-  #   full  - 使用 description（详细描述）
+  tools_dir: tools # Répertoire des fichiers de configuration des outils (relatif au répertoire du fichier de configuration)
+  # Mode de description des outils: lors du chargement des outils depuis tools, source de description exposée pour utilisation par IA/API
+  #   short - Utilise de préférence short_description (description courte, économise des tokens), utilise description si vide
+  #   full  - Utilise description (description détaillée)
   tool_description_mode: full
 
 # ============================================
-# MCP 相关配置
+# Configuration liée au MCP
 # ============================================
 
-# MCP 协议配置
-# MCP (Model Context Protocol) 用于工具注册和调用
+# Configuration du protocole MCP
+# MCP (Model Context Protocol) utilisé pour l'enregistrement et l'appel d'outils
 mcp:
-  enabled: false # 是否启用 MCP 服务器（http模式）
-  host: 0.0.0.0  # MCP 服务器监听地址
-  port: 8081     # MCP 服务器端口
+  enabled: false # Activer ou non le serveur MCP (mode http)
+  host: 0.0.0.0  # Adresse d'écoute du serveur MCP
+  port: 8081     # Port du serveur MCP
 
-# 外部 MCP 配置
+# Configuration MCP externe
 external_mcp:
   servers: {}
 
 # ============================================
-# 知识库相关配置
+# Configuration liée à la base de connaissances
 # ============================================
 
 knowledge:
-  enabled: false                    # 是否启用知识检索功能
-  base_path: knowledge_base         # 知识库目录路径（相对于配置文件所在目录）
+  enabled: false                    # Activer ou non la fonctionnalité de récupération de connaissances
+  base_path: knowledge_base         # Chemin du répertoire de la base de connaissances (relatif au répertoire du fichier de configuration)
   embedding:
-    provider: openai                # 嵌入模型提供商（目前仅支持openai）
-    model: text-embedding-v4        # 嵌入模型名称
-    base_url: https://api.deepseek.com/v1 # 留空则使用OpenAI配置的base_url
-    api_key: sk-xxxxxx              # 留空则使用OpenAI配置的api_key
+    provider: openai                # Fournisseur de modèle d'embedding (actuellement seul openai est pris en charge)
+    model: text-embedding-v4        # Nom du modèle d'embedding
+    base_url: https://api.deepseek.com/v1 # Laisser vide pour utiliser base_url de la configuration OpenAI
+    api_key: sk-xxxxxx              # Laisser vide pour utiliser api_key de la configuration OpenAI
   retrieval:
-    top_k: 5                        # 检索返回的Top-K结果数量
-    similarity_threshold: 0.7       # 相似度阈值（0-1），低于此值的结果将被过滤
-    hybrid_weight: 0.7              # 混合检索权重（0-1），向量检索的权重，1.0表示纯向量检索，0.0表示纯关键词检索
+    top_k: 5                        # Nombre de résultats Top-K retournés par la récupération
+    similarity_threshold: 0.7       # Seuil de similarité (0-1), les résultats en dessous de ce seuil seront filtrés
+    hybrid_weight: 0.7              # Poids de récupération hybride (0-1), poids de la récupération vectorielle, 1.0 signifie récupération purement vectorielle, 0.0 signifie récupération purement par mots-clés
 
 # ============================================
-# 机器人配置（企业微信、钉钉、飞书）
+# Configuration des robots (WeChat Entreprise, DingTalk, Feishu)
 # ============================================
-# 用于在手机端通过企业微信/钉钉/飞书与 CyberStrikeAI 对话，无需部署在服务器上也可使用
-# 在系统设置 -> 机器人设置 中可配置
+# Utilisé pour dialoguer avec CyberStrikeAI depuis un téléphone mobile via WeChat Entreprise/DingTalk/Feishu, utilisable sans déploiement sur serveur
+# Peut être configuré dans Paramètres système -> Paramètres du robot
 robots:
-  wecom: # 企业微信
+  wecom: # WeChat Entreprise
     enabled: false
     token: ""
     encoding_aes_key: ""
     corp_id: ""
     secret: ""
     agent_id: 0
-  dingtalk: # 钉钉
+  dingtalk: # DingTalk
     enabled: false
-    client_id: 
-    client_secret: 
-  lark: # 飞书
+    client_id:
+    client_secret:
+  lark: # Feishu (Lark)
     enabled: false
     app_id: ""
     app_secret: ""
     verify_token: ""
 
 # ============================================
-# Skills 相关配置
+# Configuration liée aux Skills
 # ============================================
 
-# 系统会从该目录加载所有skills，每个skill应是一个目录，包含SKILL.md文件
-# 例如：skills/sql-injection-testing/SKILL.md
-skills_dir: skills # Skills配置文件目录（相对于配置文件所在目录）
+# Le système chargera tous les skills depuis ce répertoire, chaque skill doit être un répertoire contenant un fichier SKILL.md
+# Par exemple: skills/sql-injection-testing/SKILL.md
+skills_dir: skills # Répertoire des fichiers de configuration Skills (relatif au répertoire du fichier de configuration)
 
 # ============================================
-# 角色相关配置
+# Configuration liée aux rôles
 # ============================================
 
-# 系统会从该目录加载所有 .yaml 格式的角色配置文件
-# 每个角色应创建独立的配置文件，例如：roles/CTF.yaml, roles/默认.yaml 等
-roles_dir: roles # 角色配置文件目录（相对于配置文件所在目录）
+# Le système chargera tous les fichiers de configuration de rôles au format .yaml depuis ce répertoire
+# Chaque rôle doit créer un fichier de configuration indépendant, par exemple: roles/CTF.yaml, roles/Par-defaut.yaml, etc.
+roles_dir: roles # Répertoire des fichiers de configuration des rôles (relatif au répertoire du fichier de configuration)

@@ -1,0 +1,5 @@
+name: Par défaut
+description: Rôle par défaut, sans prompt utilisateur supplémentaire, utilise le MCP par défaut
+user_prompt: ""
+icon: "\U0001F535"
+enabled: true

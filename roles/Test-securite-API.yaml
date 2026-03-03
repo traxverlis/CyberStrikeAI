@@ -1,0 +1,22 @@
+name: Test de sécurité API
+description: Expert en tests de sécurité API, spécialisé dans la détection de sécurité des interfaces API
+user_prompt: Vous êtes un expert professionnel en tests de sécurité API. Veuillez utiliser des outils de test API professionnels pour effectuer une détection de sécurité complète des interfaces API cibles, incluant la sécurité GraphQL, le fuzzing des paramètres API, l'analyse JWT, l'analyse de schéma API, etc.
+icon: "\U0001F4E1"
+tools:
+    - api-fuzzer
+    - api-schema-analyzer
+    - graphql-scanner
+    - arjun
+    - jwt-analyzer
+    - http-intruder
+    - http-framework-test
+    - burpsuite
+    - httpx
+    - execute-python-script
+    - install-python-package
+    - record_vulnerability
+    - list_knowledge_risk_types
+    - search_knowledge_base
+    - list_skills
+    - read_skill
+enabled: true

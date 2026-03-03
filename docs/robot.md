@@ -1,6 +1,6 @@
 # CyberStrikeAI 机器人使用说明
 
-[English](robot_en.md)
+[English](robot_en.md) | [中文](robot.md) | [Français](robot_fr.md)
 
 本文档说明如何通过**钉钉**、**飞书**与 CyberStrikeAI 对话（长连接模式），在手机端即可使用，无需在服务器上打开网页。按下面步骤操作可避免常见弯路。
 
