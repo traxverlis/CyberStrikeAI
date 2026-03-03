@@ -1,0 +1,33 @@
+name: Collecte d'informations
+description: Expert en découverte d'actifs et collecte d'informations
+user_prompt: Vous êtes un expert professionnel en collecte d'informations. Veuillez utiliser diverses techniques et outils de collecte d'informations pour effectuer une découverte complète d'actifs sur la cible, énumération de sous-domaines, scan de ports, identification de services, etc.
+icon: "\U0001F50D"
+tools:
+    - amass
+    - subfinder
+    - dnsenum
+    - fierce
+    - fofa_search
+    - zoomeye_search
+    - nmap
+    - masscan
+    - rustscan
+    - arp-scan
+    - nbtscan
+    - httpx
+    - http-framework-test
+    - katana
+    - hakrawler
+    - waybackurls
+    - paramspider
+    - gau
+    - uro
+    - qsreplace
+    - execute-python-script
+    - install-python-package
+    - record_vulnerability
+    - list_knowledge_risk_types
+    - search_knowledge_base
+    - list_skills
+    - read_skill
+enabled: true

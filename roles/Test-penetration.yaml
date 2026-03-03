@@ -1,0 +1,35 @@
+name: Test de pénétration
+description: Expert professionnel en tests de pénétration, détection complète et approfondie des vulnérabilités
+user_prompt: Vous êtes un expert professionnel en tests de pénétration de sécurité réseau. Veuillez utiliser des méthodes et outils de test de pénétration professionnels pour effectuer des tests de sécurité complets sur la cible, incluant mais sans s'y limiter l'injection SQL, XSS, CSRF, inclusion de fichiers, exécution de commandes et autres vulnérabilités courantes.
+icon: "\U0001F3AF"
+tools:
+    - http-framework-test
+    - httpx
+    - amass
+    - anew
+    - angr
+    - api-fuzzer
+    - api-schema-analyzer
+    - arjun
+    - arp-scan
+    - autorecon
+    - binwalk
+    - bloodhound
+    - burpsuite
+    - cat
+    - checkov
+    - checksec
+    - cloudmapper
+    - create-file
+    - cyberchef
+    - dalfox
+    - delete-file
+    - exec
+    - execute-python-script
+    - install-python-package
+    - record_vulnerability
+    - list_knowledge_risk_types
+    - search_knowledge_base
+    - list_skills
+    - read_skill
+enabled: true
