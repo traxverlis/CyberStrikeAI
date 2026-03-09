@@ -1367,7 +1367,7 @@ function formatExternalMCPJSON() {
     try {
         const jsonStr = jsonTextarea.value.trim();
         if (!jsonStr) {
-            errorDiv.textContent = 'JSON不能为空';
+            errorDiv.textContent = (typeof window.t === 'function' ? window.t('mcp.jsonEmpty') : 'JSON不能为空');
             errorDiv.style.display = 'block';
             jsonTextarea.classList.add('error');
             return;
@@ -1379,7 +1379,7 @@ function formatExternalMCPJSON() {
         errorDiv.style.display = 'none';
         jsonTextarea.classList.remove('error');
     } catch (error) {
-        errorDiv.textContent = 'JSON格式错误: ' + error.message;
+        errorDiv.textContent = (typeof window.t === 'function' ? window.t('mcp.jsonError') : 'JSON格式错误') + ': ' + error.message;
         errorDiv.style.display = 'block';
         jsonTextarea.classList.add('error');
     }
@@ -1387,6 +1387,7 @@ function formatExternalMCPJSON() {
 
 // 加载示例
 function loadExternalMCPExample() {
+    const desc = (typeof window.t === 'function' ? window.t('externalMcpModal.exampleDescription') : '示例描述');
     const example = {
         "hexstrike-ai": {
             command: "python3",
@@ -1395,7 +1396,7 @@ function loadExternalMCPExample() {
                 "--server",
                 "http://example.com"
             ],
-            description: "示例描述",
+            description: desc,
             timeout: 300
         },
         "cyberstrike-ai-http": {
@@ -1420,7 +1421,7 @@ async function saveExternalMCP() {
     const errorDiv = document.getElementById('external-mcp-json-error');
     
     if (!jsonStr) {
-        errorDiv.textContent = 'JSON配置不能为空';
+        errorDiv.textContent = (typeof window.t === 'function' ? window.t('mcp.jsonEmpty') : 'JSON不能为空');
         errorDiv.style.display = 'block';
         jsonTextarea.classList.add('error');
         jsonTextarea.focus();
@@ -1431,16 +1432,17 @@ async function saveExternalMCP() {
     try {
         configObj = JSON.parse(jsonStr);
     } catch (error) {
-        errorDiv.textContent = 'JSON格式错误: ' + error.message;
+        errorDiv.textContent = (typeof window.t === 'function' ? window.t('mcp.jsonError') : 'JSON格式错误') + ': ' + error.message;
         errorDiv.style.display = 'block';
         jsonTextarea.classList.add('error');
         jsonTextarea.focus();
         return;
     }
     
+    const t = (typeof window.t === 'function' ? window.t : function (k, opts) { return k; });
     // 验证必须是对象格式
     if (typeof configObj !== 'object' || Array.isArray(configObj) || configObj === null) {
-        errorDiv.textContent = '配置错误: 必须是JSON对象格式，key为配置名称，value为配置内容';
+        errorDiv.textContent = t('mcp.configMustBeObject');
         errorDiv.style.display = 'block';
         jsonTextarea.classList.add('error');
         return;
@@ -1449,7 +1451,7 @@ async function saveExternalMCP() {
     // 获取所有配置名称
     const names = Object.keys(configObj);
     if (names.length === 0) {
-        errorDiv.textContent = '配置错误: 至少需要一个配置项';
+        errorDiv.textContent = t('mcp.configNeedOne');
         errorDiv.style.display = 'block';
         jsonTextarea.classList.add('error');
         return;
@@ -1458,7 +1460,7 @@ async function saveExternalMCP() {
     // 验证每个配置
     for (const name of names) {
         if (!name || name.trim() === '') {
-            errorDiv.textContent = '配置错误: 配置名称不能为空';
+            errorDiv.textContent = t('mcp.configNameEmpty');
             errorDiv.style.display = 'block';
             jsonTextarea.classList.add('error');
             return;
@@ -1466,7 +1468,7 @@ async function saveExternalMCP() {
         
         const config = configObj[name];
         if (typeof config !== 'object' || Array.isArray(config) || config === null) {
-            errorDiv.textContent = `配置错误: "${name}" 的配置必须是对象`;
+            errorDiv.textContent = t('mcp.configMustBeObj', { name: name });
             errorDiv.style.display = 'block';
             jsonTextarea.classList.add('error');
             return;
@@ -1478,28 +1480,28 @@ async function saveExternalMCP() {
         // 验证配置内容
         const transport = config.transport || (config.command ? 'stdio' : config.url ? 'http' : '');
         if (!transport) {
-            errorDiv.textContent = `配置错误: "${name}" 需要指定command（stdio模式）或url（http/sse模式）`;
+            errorDiv.textContent = t('mcp.configNeedCommand', { name: name });
             errorDiv.style.display = 'block';
             jsonTextarea.classList.add('error');
             return;
         }
         
         if (transport === 'stdio' && !config.command) {
-            errorDiv.textContent = `配置错误: "${name}" stdio模式需要command字段`;
+            errorDiv.textContent = t('mcp.configStdioNeedCommand', { name: name });
             errorDiv.style.display = 'block';
             jsonTextarea.classList.add('error');
             return;
         }
         
         if (transport === 'http' && !config.url) {
-            errorDiv.textContent = `配置错误: "${name}" http模式需要url字段`;
+            errorDiv.textContent = t('mcp.configHttpNeedUrl', { name: name });
             errorDiv.style.display = 'block';
             jsonTextarea.classList.add('error');
             return;
         }
         
         if (transport === 'sse' && !config.url) {
-            errorDiv.textContent = `配置错误: "${name}" sse模式需要url字段`;
+            errorDiv.textContent = t('mcp.configSseNeedUrl', { name: name });
             errorDiv.style.display = 'block';
             jsonTextarea.classList.add('error');
             return;
@@ -1514,7 +1516,7 @@ async function saveExternalMCP() {
         // 如果是编辑模式，只更新当前编辑的配置
         if (currentEditingMCPName) {
             if (!configObj[currentEditingMCPName]) {
-                errorDiv.textContent = `配置错误: 编辑模式下，JSON必须包含配置名称 "${currentEditingMCPName}"`;
+                errorDiv.textContent = (typeof window.t === 'function' ? window.t('mcp.configEditMustContainName', { name: currentEditingMCPName }) : '配置错误: 编辑模式下，JSON必须包含配置名称 "' + currentEditingMCPName + '"');
                 errorDiv.style.display = 'block';
                 jsonTextarea.classList.add('error');
                 return;
@@ -1561,7 +1563,7 @@ async function saveExternalMCP() {
         alert(typeof window.t === 'function' ? window.t('mcp.saveSuccess') : '保存成功');
     } catch (error) {
         console.error('保存外部MCP失败:', error);
-        errorDiv.textContent = '保存失败: ' + error.message;
+        errorDiv.textContent = (typeof window.t === 'function' ? window.t('mcp.operationFailed') : '保存失败') + ': ' + error.message;
         errorDiv.style.display = 'block';
         jsonTextarea.classList.add('error');
     }

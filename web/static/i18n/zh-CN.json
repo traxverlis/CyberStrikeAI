@@ -14,7 +14,8 @@
     "confirm": "确认",
     "copy": "复制",
     "copied": "已复制",
-    "copyFailed": "复制失败"
+    "copyFailed": "复制失败",
+    "view": "查看"
   },
   "header": {
     "title": "CyberStrikeAI",
@@ -340,6 +341,7 @@
     "configStdioNeedCommand": "配置错误: \"{{name}}\" stdio模式需要command字段",
     "configHttpNeedUrl": "配置错误: \"{{name}}\" http模式需要url字段",
     "configSseNeedUrl": "配置错误: \"{{name}}\" sse模式需要url字段",
+    "configEditMustContainName": "配置错误: 编辑模式下，JSON必须包含配置名称 \"{{name}}\"",
     "saveSuccess": "保存成功",
     "deleteSuccess": "删除成功",
     "deleteExternalConfirm": "确定要删除外部MCP \"{{name}}\" 吗？",
@@ -364,15 +366,36 @@
       "description": "配置企业微信、钉钉、飞书等机器人，在手机端直接与 CyberStrikeAI 对话，无需在服务器上打开网页。",
       "wecom": {
         "title": "企业微信",
-        "enabled": "启用企业微信机器人"
+        "enabled": "启用企业微信机器人",
+        "token": "Token",
+        "tokenPlaceholder": "Token",
+        "encodingAesKey": "EncodingAESKey",
+        "encodingAesKeyPlaceholder": "EncodingAESKey（明文模式可留空）",
+        "corpId": "CorpID",
+        "corpIdPlaceholder": "企业 ID",
+        "secret": "Secret",
+        "secretPlaceholder": "应用 Secret",
+        "agentId": "AgentID",
+        "agentIdPlaceholder": "应用 AgentId"
       },
       "dingtalk": {
         "title": "钉钉",
-        "enabled": "启用钉钉机器人"
+        "enabled": "启用钉钉机器人",
+        "clientIdLabel": "Client ID (AppKey)",
+        "clientIdPlaceholder": "钉钉应用 AppKey",
+        "clientSecretLabel": "Client Secret",
+        "clientSecretPlaceholder": "钉钉应用 Secret",
+        "streamHint": "需开启机器人能力并配置流式接入"
       },
       "lark": {
         "title": "飞书 (Lark)",
-        "enabled": "启用飞书机器人"
+        "enabled": "启用飞书机器人",
+        "appIdLabel": "App ID",
+        "appIdPlaceholder": "飞书应用 App ID",
+        "appSecretLabel": "App Secret",
+        "appSecretPlaceholder": "飞书应用 App Secret",
+        "verifyTokenLabel": "Verify Token（可选）",
+        "verifyTokenPlaceholder": "事件订阅 Verification Token"
       }
     },
     "apply": {
@@ -414,7 +437,15 @@
     "title": "角色管理",
     "createRole": "创建角色",
     "searchPlaceholder": "搜索角色...",
-    "deleteConfirm": "确定要删除角色..."
+    "deleteConfirm": "确定要删除角色...",
+    "loadFailed": "加载角色失败",
+    "noDescription": "暂无描述",
+    "defaultRoleDescription": "默认角色，不额外携带用户提示词，使用默认MCP",
+    "noMatchingRoles": "没有找到匹配的角色",
+    "noRoles": "暂无角色",
+    "enabled": "已启用",
+    "disabled": "已禁用",
+    "noDescriptionShort": "无描述"
   },
   "skills": {
     "title": "Skills管理",
@@ -436,7 +467,36 @@
     "loadStatsFailed": "加载skills监控数据失败",
     "clearStatsConfirm": "确定要清空所有Skills统计数据吗？此操作不可恢复。",
     "statsCleared": "已清空所有Skills统计数据",
-    "clearStatsFailed": "清空统计数据失败"
+    "clearStatsFailed": "清空统计数据失败",
+    "noDescription": "无描述",
+    "viewSkillTitle": "查看Skill: {{name}}",
+    "descriptionLabel": "描述:",
+    "pathLabel": "路径:",
+    "modTimeLabel": "修改时间:",
+    "contentLabel": "内容:",
+    "nameRequired": "skill名称不能为空",
+    "contentRequired": "skill内容不能为空",
+    "nameInvalid": "skill名称只能包含字母、数字、连字符和下划线",
+    "saveSuccess": "skill已更新",
+    "createdSuccess": "skill已创建",
+    "deleteConfirm": "确定要删除skill \"{{name}}\" 吗？此操作不可恢复。",
+    "deleteConfirmWithRoles": "确定要删除skill \"{{name}}\" 吗？\n\n⚠️ 该skill当前已被以下 {{count}} 个角色绑定：\n{{roles}}\n\n删除后，系统将自动从这些角色中移除该skill的绑定。\n\n此操作不可恢复，是否继续？",
+    "deleteSuccess": "skill已删除",
+    "deleteSuccessWithRoles": "skill已删除，已自动从 {{count}} 个角色中移除绑定：{{roles}}",
+    "loadFailedShort": "加载失败",
+    "totalSkillsCount": "总Skills数",
+    "totalCallsCount": "总调用次数",
+    "successfulCalls": "成功调用",
+    "failedCalls": "失败调用",
+    "successRate": "成功率",
+    "skillName": "Skill名称",
+    "totalCalls": "总调用",
+    "success": "成功",
+    "failure": "失败",
+    "lastCallTime": "最后调用时间",
+    "noCallRecords": "暂无Skills调用记录",
+    "loadStatsErrorShort": "无法加载统计信息",
+    "loadCallStatsError": "无法加载调用统计"
   },
   "apiDocs": {
     "curlCopied": "curl命令已复制到剪贴板！"
@@ -580,6 +640,15 @@
     "presetLogin": "登录页 + 中国",
     "presetDomain": "指定域名",
     "presetIp": "指定 IP",
+    "queryPresetsAria": "FOFA 查询示例",
+    "fieldsPresetsAria": "FOFA 字段模板",
+    "resultsToolbarAria": "结果工具条",
+    "fillExample": "填入示例",
+    "parseBtnTitle": "将自然语言解析为 FOFA 查询语法",
+    "minFieldsTitle": "适合快速导出目标",
+    "webCommonTitle": "适合浏览和筛选",
+    "intelEnhancedTitle": "更偏指纹/情报",
+    "fullLabel": "full",
     "nlPlaceholder": "例如：找美国 Missouri 的 Apache 站点，标题包含 Home",
     "showHideColumns": "显示/隐藏字段",
     "exportCsvTitle": "导出当前结果为 CSV（UTF-8，兼容中文）",
@@ -617,7 +686,14 @@
     "clearStatsTitle": "清空所有统计数据",
     "skillsCallStats": "Skills调用统计",
     "searchPlaceholder": "搜索Skills...",
-    "loading": "加载中..."
+    "loading": "加载中...",
+    "paginationShow": "显示 {{start}}-{{end}} / 共 {{total}} 条",
+    "perPageLabel": "每页显示",
+    "firstPage": "首页",
+    "prevPage": "上一页",
+    "pageOf": "第 {{current}} / {{total}} 页",
+    "nextPage": "下一页",
+    "lastPage": "尾页"
   },
   "settingsBasic": {
     "basicTitle": "基本设置",
@@ -703,7 +779,19 @@
   },
   "settingsRobotsExtra": {
     "botCommandsTitle": "机器人命令说明",
-    "botCommandsDesc": "在对话中可发送以下命令（支持中英文）："
+    "botCommandsDesc": "在对话中可发送以下命令（支持中英文）：",
+    "botCmdHelp": "显示本帮助 | Show this help",
+    "botCmdList": "列出所有对话标题与 ID | List conversations",
+    "botCmdSwitch": "指定对话继续 | Switch to conversation",
+    "botCmdNew": "开启新对话 | Start new conversation",
+    "botCmdClear": "清空当前上下文 | Clear context",
+    "botCmdCurrent": "显示当前对话 ID 与标题 | Show current conversation",
+    "botCmdStop": "中断当前任务 | Stop running task",
+    "botCmdRoles": "列出所有可用角色 | List roles",
+    "botCmdRole": "切换当前角色 | Switch role",
+    "botCmdDelete": "删除指定对话 | Delete conversation",
+    "botCmdVersion": "显示当前版本号 | Show version",
+    "botCommandsFooter": "除以上命令外，直接输入内容将发送给 AI 进行渗透测试/安全分析。Otherwise, send any text for AI penetration testing / security analysis."
   },
   "mcpDetailModal": {
     "title": "工具调用详情",
@@ -752,6 +840,15 @@
     "configJson": "配置JSON",
     "formatLabel": "配置格式：",
     "formatDesc": "JSON对象，key为配置名称，value为配置内容。状态通过\"启动/停止\"按钮控制，无需在JSON中配置。",
+    "configExample": "配置示例：",
+    "stdioMode": "stdio模式：",
+    "httpMode": "HTTP模式：",
+    "sseMode": "SSE模式：",
+    "placeholder": "{\n  \"hexstrike-ai\": {\n    \"command\": \"python3\",\n    \"args\": [\"/path/to/script.py\"],\n    \"description\": \"描述\",\n    \"timeout\": 300\n  }\n}",
+    "exampleStdio": "{\n  \"hexstrike-ai\": {\n    \"command\": \"python3\",\n    \"args\": [\"/path/to/script.py\", \"--server\", \"http://example.com\"],\n    \"description\": \"描述\",\n    \"timeout\": 300\n  }\n}",
+    "exampleHttp": "{\n  \"cyberstrike-ai-http\": {\n    \"transport\": \"http\",\n    \"url\": \"http://127.0.0.1:8081/mcp\"\n  }\n}",
+    "exampleSse": "{\n  \"cyberstrike-ai-sse\": {\n    \"transport\": \"sse\",\n    \"url\": \"http://127.0.0.1:8081/mcp/sse\"\n  }\n}",
+    "exampleDescription": "示例描述",
     "formatJson": "格式化JSON",
     "loadExample": "加载示例"
   },
@@ -765,7 +862,7 @@
     "descriptionPlaceholder": "Skill的简短描述",
     "contentLabel": "内容（Markdown格式）",
     "contentPlaceholder": "输入skill内容，支持Markdown格式...",
-    "contentHint": "支持YAML front matter格式（可选）"
+    "contentHint": "支持YAML front matter格式（可选），例如："
   },
   "knowledgeItemModal": {
     "addKnowledge": "添加知识",
@@ -920,6 +1017,33 @@
     "searchSkillsPlaceholder": "搜索skill...",
     "loadingSkills": "正在加载skills列表...",
     "relatedSkillsHint": "勾选要关联的skills，这些skills的内容会在执行任务前注入到系统提示词中，帮助AI更好地理解相关专业知识。",
-    "enableRole": "启用此角色"
+    "enableRole": "启用此角色",
+    "selectAll": "全选",
+    "deselectAll": "全不选",
+    "roleNameRequired": "角色名称不能为空",
+    "roleNotFound": "角色不存在",
+    "firstRoleNoToolsHint": "检测到这是首次添加角色且未选择工具，将默认使用全部工具",
+    "currentPageSelected": "当前页已选中: {{current}} / {{total}}",
+    "totalSelected": "总计已选中: {{current}} / {{total}}",
+    "usingAllEnabledTools": "（使用所有已启用工具）",
+    "currentPageSelectedTitle": "当前页选中的工具数（只统计已启用的工具）",
+    "totalSelectedTitle": "角色已关联的工具总数（基于角色实际配置）",
+    "skillsSelectedCount": "已选择 {{count}} / {{total}}",
+    "loadToolsFailed": "加载工具列表失败",
+    "loadSkillsFailed": "加载skills列表失败",
+    "cannotDeleteDefaultRole": "不能删除默认角色",
+    "noMatchingSkills": "没有找到匹配的skills",
+    "noSkillsAvailable": "暂无可用skills",
+    "usingAllTools": "使用所有工具",
+    "andNMore": " 等 {{count}} 个",
+    "toolsLabel": "工具:",
+    "noTools": "暂无工具",
+    "paginationShow": "显示 {{start}}-{{end}} / 共 {{total}} 个工具",
+    "paginationSearch": " (搜索: \"{{keyword}}\")",
+    "firstPage": "首页",
+    "prevPage": "上一页",
+    "pageOf": "第 {{page}} / {{total}} 页",
+    "nextPage": "下一页",
+    "lastPage": "末页"
   }
 }

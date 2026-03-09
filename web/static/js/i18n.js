@@ -61,18 +61,23 @@
             const isFormControl = (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA');
             const attrList = el.getAttribute('data-i18n-attr');
             const text = i18next.t(key);
-
-            // 仅当未使用 data-i18n-attr 时才替换元素文本内容（否则会覆盖卡片内的数字、子节点等）
-            // input/textarea：永不设置 textContent（会变成 value），只更新属性
-            if (!attrList && !skipText && !isFormControl && text && typeof text === 'string') {
+            // 仅当元素无子元素（仅文本或空）时才替换文本，避免覆盖卡片内的数字、子节点等；input/textarea 永不设置 textContent
+            const hasNoElementChildren = !el.querySelector('*');
+            if (!skipText && !isFormControl && hasNoElementChildren && text && typeof text === 'string') {
                 el.textContent = text;
             }
 
             if (attrList) {
+                const titleKey = el.getAttribute('data-i18n-title');
                 attrList.split(',').map(function (s) { return s.trim(); }).forEach(function (attr) {
                     if (!attr) return;
-                    if (text && typeof text === 'string') {
-                        el.setAttribute(attr, text);
+                    var val = text;
+                    if (attr === 'title' && titleKey) {
+                        var titleText = i18next.t(titleKey);
+                        if (titleText && typeof titleText === 'string') val = titleText;
+                    }
+                    if (val && typeof val === 'string') {
+                        el.setAttribute(attr, val);
                     }
                 });
             }

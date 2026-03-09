@@ -774,18 +774,18 @@
                                     <label for="fofa-query" data-i18n="infoCollectPage.fofaQuerySyntax">FOFA 查询语法</label>
                                     <textarea id="fofa-query" class="info-collect-query-input" rows="1" data-i18n="infoCollect.queryPlaceholder" data-i18n-attr="placeholder" placeholder='例如：app="Apache" && country="CN"'></textarea>
                                     <small class="form-hint" data-i18n="infoCollectPage.formHint">查询语法参考 FOFA 文档，支持 && / || / () 等。</small>
-                                    <div class="info-collect-presets" aria-label="FOFA 查询示例">
-                                        <button class="preset-chip" type="button" onclick="applyFofaQueryPreset('app=&quot;Apache&quot; &amp;&amp; country=&quot;CN&quot;')" data-i18n="infoCollectPage.presetApache" data-i18n-attr="title" title="填入示例">Apache + 中国</button>
-                                        <button class="preset-chip" type="button" onclick="applyFofaQueryPreset('title=&quot;登录&quot; &amp;&amp; country=&quot;CN&quot;')" data-i18n="infoCollectPage.presetLogin" data-i18n-attr="title" title="填入示例">登录页 + 中国</button>
-                                        <button class="preset-chip" type="button" onclick="applyFofaQueryPreset('domain=&quot;example.com&quot;')" data-i18n="infoCollectPage.presetDomain" data-i18n-attr="title" title="填入示例">指定域名</button>
-                                        <button class="preset-chip" type="button" onclick="applyFofaQueryPreset('ip=&quot;1.1.1.1&quot;')" data-i18n="infoCollectPage.presetIp" data-i18n-attr="title" title="填入示例">指定 IP</button>
+                                    <div class="info-collect-presets" aria-label="FOFA 查询示例" data-i18n="infoCollectPage.queryPresetsAria" data-i18n-attr="aria-label" data-i18n-skip-text="true">
+                                        <button class="preset-chip" type="button" onclick="applyFofaQueryPreset('app=&quot;Apache&quot; &amp;&amp; country=&quot;CN&quot;')" data-i18n="infoCollectPage.presetApache" data-i18n-attr="title" data-i18n-title="infoCollectPage.fillExample" title="填入示例">Apache + 中国</button>
+                                        <button class="preset-chip" type="button" onclick="applyFofaQueryPreset('title=&quot;登录&quot; &amp;&amp; country=&quot;CN&quot;')" data-i18n="infoCollectPage.presetLogin" data-i18n-attr="title" data-i18n-title="infoCollectPage.fillExample" title="填入示例">登录页 + 中国</button>
+                                        <button class="preset-chip" type="button" onclick="applyFofaQueryPreset('domain=&quot;example.com&quot;')" data-i18n="infoCollectPage.presetDomain" data-i18n-attr="title" data-i18n-title="infoCollectPage.fillExample" title="填入示例">指定域名</button>
+                                        <button class="preset-chip" type="button" onclick="applyFofaQueryPreset('ip=&quot;1.1.1.1&quot;')" data-i18n="infoCollectPage.presetIp" data-i18n-attr="title" data-i18n-title="infoCollectPage.fillExample" title="填入示例">指定 IP</button>
                                     </div>
                                 </div>
                                 <div class="form-group">
                                     <label for="fofa-nl" data-i18n="infoCollectPage.naturalLanguage">自然语言（AI 解析为 FOFA 语法）</label>
                                     <div class="info-collect-nl-row">
                                         <textarea id="fofa-nl" class="info-collect-query-input" rows="1" data-i18n="infoCollectPage.nlPlaceholder" data-i18n-attr="placeholder" placeholder="例如：找美国 Missouri 的 Apache 站点，标题包含 Home"></textarea>
-                                        <button id="fofa-nl-parse-btn" class="btn-secondary" type="button" onclick="parseFofaNaturalLanguage()" data-i18n="infoCollectPage.parseBtn" data-i18n-attr="title" title="将自然语言解析为 FOFA 查询语法">AI 解析</button>
+                                        <button id="fofa-nl-parse-btn" class="btn-secondary" type="button" onclick="parseFofaNaturalLanguage()" data-i18n="infoCollectPage.parseBtn" data-i18n-attr="title" data-i18n-title="infoCollectPage.parseBtnTitle" title="将自然语言解析为 FOFA 查询语法">AI 解析</button>
                                     </div>
                                     <div id="fofa-nl-status" class="fofa-nl-status muted" style="display: none;" aria-live="polite"></div>
                                     <small class="form-hint" data-i18n="infoCollectPage.parseHint">解析后会弹窗展示 FOFA 语法（可编辑），确认无误后再填入查询框并执行查询。</small>
@@ -803,17 +803,17 @@
                                         <label class="checkbox-label" style="margin-top: 24px;">
                                             <input type="checkbox" id="fofa-full" class="modern-checkbox" />
                                             <span class="checkbox-custom"></span>
-                                            <span class="checkbox-text">full</span>
+                                            <span class="checkbox-text" data-i18n="infoCollectPage.fullLabel">full</span>
                                         </label>
                                     </div>
                                 </div>
                                 <div class="form-group">
                                     <label for="fofa-fields" data-i18n="infoCollectPage.returnFields">返回字段名（逗号分隔）</label>
                                     <input type="text" id="fofa-fields" value="host,ip,port,domain,title,protocol,country,province,city,server" />
-                                    <div class="info-collect-presets" aria-label="FOFA 字段模板">
-                                        <button class="preset-chip" type="button" onclick="applyFofaFieldsPreset('host,ip,port,domain')" data-i18n="infoCollectPage.minFields" data-i18n-attr="title" title="适合快速导出目标">最小字段</button>
-                                        <button class="preset-chip" type="button" onclick="applyFofaFieldsPreset('host,title,ip,port,domain,protocol,server,icp,country,province,city')" data-i18n="infoCollectPage.webCommon" data-i18n-attr="title" title="适合浏览和筛选">Web 常用</button>
-                                        <button class="preset-chip" type="button" onclick="applyFofaFieldsPreset('host,ip,port,domain,title,protocol,country,province,city,server,as_number,as_organization,icp,header,banner')" data-i18n="infoCollectPage.intelEnhanced" data-i18n-attr="title" title="更偏指纹/情报">情报增强</button>
+                                    <div class="info-collect-presets" aria-label="FOFA 字段模板" data-i18n="infoCollectPage.fieldsPresetsAria" data-i18n-attr="aria-label" data-i18n-skip-text="true">
+                                        <button class="preset-chip" type="button" onclick="applyFofaFieldsPreset('host,ip,port,domain')" data-i18n="infoCollectPage.minFields" data-i18n-attr="title" data-i18n-title="infoCollectPage.minFieldsTitle" title="适合快速导出目标">最小字段</button>
+                                        <button class="preset-chip" type="button" onclick="applyFofaFieldsPreset('host,title,ip,port,domain,protocol,server,icp,country,province,city')" data-i18n="infoCollectPage.webCommon" data-i18n-attr="title" data-i18n-title="infoCollectPage.webCommonTitle" title="适合浏览和筛选">Web 常用</button>
+                                        <button class="preset-chip" type="button" onclick="applyFofaFieldsPreset('host,ip,port,domain,title,protocol,country,province,city,server,as_number,as_organization,icp,header,banner')" data-i18n="infoCollectPage.intelEnhanced" data-i18n-attr="title" data-i18n-title="infoCollectPage.intelEnhancedTitle" title="更偏指纹/情报">情报增强</button>
                                     </div>
                                 </div>
                             </div>
@@ -825,7 +825,7 @@
                                     <div class="info-collect-results-title" data-i18n="infoCollectPage.queryResults">查询结果</div>
                                     <div class="info-collect-results-meta" id="fofa-results-meta">-</div>
                                 </div>
-                                <div class="info-collect-results-toolbar" aria-label="结果工具条">
+                                <div class="info-collect-results-toolbar" aria-label="结果工具条" data-i18n="infoCollectPage.resultsToolbarAria" data-i18n-attr="aria-label" data-i18n-skip-text="true">
                                     <div class="info-collect-selected" id="fofa-selected-meta" data-i18n="infoCollectPage.selectedRowsZero">已选择 0 条</div>
                                     <button class="btn-secondary btn-small" type="button" onclick="toggleFofaColumnsPanel()" data-i18n="infoCollectPage.showHideColumns" data-i18n-attr="title" title="显示/隐藏字段"><span data-i18n="infoCollectPage.columns">列</span></button>
                                     <button class="btn-secondary btn-small" type="button" onclick="exportFofaResults('csv')" data-i18n="infoCollectPage.exportCsvTitle" data-i18n-attr="title" title="导出当前结果为 CSV（UTF-8，兼容中文）"><span data-i18n="infoCollectPage.exportCsv">导出 CSV</span></button>
@@ -1281,24 +1281,24 @@
                                             </label>
                                         </div>
                                         <div class="form-group">
-                                            <label for="robot-wecom-token">Token</label>
-                                            <input type="text" id="robot-wecom-token" placeholder="Token" autocomplete="off" />
+                                            <label for="robot-wecom-token" data-i18n="settings.robots.wecom.token">Token</label>
+                                            <input type="text" id="robot-wecom-token" data-i18n="settings.robots.wecom.tokenPlaceholder" data-i18n-attr="placeholder" placeholder="Token" autocomplete="off" />
                                         </div>
                                         <div class="form-group">
-                                            <label for="robot-wecom-encoding-aes-key">EncodingAESKey</label>
-                                            <input type="text" id="robot-wecom-encoding-aes-key" placeholder="EncodingAESKey（明文模式可留空）" autocomplete="off" />
+                                            <label for="robot-wecom-encoding-aes-key" data-i18n="settings.robots.wecom.encodingAesKey">EncodingAESKey</label>
+                                            <input type="text" id="robot-wecom-encoding-aes-key" data-i18n="settings.robots.wecom.encodingAesKeyPlaceholder" data-i18n-attr="placeholder" placeholder="EncodingAESKey（明文模式可留空）" autocomplete="off" />
                                         </div>
                                         <div class="form-group">
-                                            <label for="robot-wecom-corp-id">CorpID</label>
-                                            <input type="text" id="robot-wecom-corp-id" placeholder="企业 ID" autocomplete="off" />
+                                            <label for="robot-wecom-corp-id" data-i18n="settings.robots.wecom.corpId">CorpID</label>
+                                            <input type="text" id="robot-wecom-corp-id" data-i18n="settings.robots.wecom.corpIdPlaceholder" data-i18n-attr="placeholder" placeholder="企业 ID" autocomplete="off" />
                                         </div>
                                         <div class="form-group">
-                                            <label for="robot-wecom-secret">Secret</label>
-                                            <input type="password" id="robot-wecom-secret" placeholder="应用 Secret" autocomplete="off" />
+                                            <label for="robot-wecom-secret" data-i18n="settings.robots.wecom.secret">Secret</label>
+                                            <input type="password" id="robot-wecom-secret" data-i18n="settings.robots.wecom.secretPlaceholder" data-i18n-attr="placeholder" placeholder="应用 Secret" autocomplete="off" />
                                         </div>
                                         <div class="form-group">
-                                            <label for="robot-wecom-agent-id">AgentID</label>
-                                            <input type="number" id="robot-wecom-agent-id" placeholder="应用 AgentId" />
+                                            <label for="robot-wecom-agent-id" data-i18n="settings.robots.wecom.agentId">AgentID</label>
+                                            <input type="number" id="robot-wecom-agent-id" data-i18n="settings.robots.wecom.agentIdPlaceholder" data-i18n-attr="placeholder" placeholder="应用 AgentId" />
                                         </div>
                                     </div>
                                 </div>
@@ -1315,13 +1315,13 @@
                                             </label>
                                         </div>
                                         <div class="form-group">
-                                            <label for="robot-dingtalk-client-id">Client ID (AppKey)</label>
-                                            <input type="text" id="robot-dingtalk-client-id" placeholder="钉钉应用 AppKey" autocomplete="off" />
+                                            <label for="robot-dingtalk-client-id" data-i18n="settings.robots.dingtalk.clientIdLabel">Client ID (AppKey)</label>
+                                            <input type="text" id="robot-dingtalk-client-id" data-i18n="settings.robots.dingtalk.clientIdPlaceholder" data-i18n-attr="placeholder" placeholder="钉钉应用 AppKey" autocomplete="off" />
                                         </div>
                                         <div class="form-group">
-                                            <label for="robot-dingtalk-client-secret">Client Secret</label>
-                                            <input type="password" id="robot-dingtalk-client-secret" placeholder="钉钉应用 Secret" autocomplete="off" />
-                                            <small class="form-hint">需开启机器人能力并配置流式接入</small>
+                                            <label for="robot-dingtalk-client-secret" data-i18n="settings.robots.dingtalk.clientSecretLabel">Client Secret</label>
+                                            <input type="password" id="robot-dingtalk-client-secret" data-i18n="settings.robots.dingtalk.clientSecretPlaceholder" data-i18n-attr="placeholder" placeholder="钉钉应用 Secret" autocomplete="off" />
+                                            <small class="form-hint" data-i18n="settings.robots.dingtalk.streamHint">需开启机器人能力并配置流式接入</small>
                                         </div>
                                     </div>
                                 </div>
@@ -1338,41 +1338,41 @@
                                             </label>
                                         </div>
                                         <div class="form-group">
-                                            <label for="robot-lark-app-id">App ID</label>
-                                            <input type="text" id="robot-lark-app-id" placeholder="飞书应用 App ID" autocomplete="off" />
+                                            <label for="robot-lark-app-id" data-i18n="settings.robots.lark.appIdLabel">App ID</label>
+                                            <input type="text" id="robot-lark-app-id" data-i18n="settings.robots.lark.appIdPlaceholder" data-i18n-attr="placeholder" placeholder="飞书应用 App ID" autocomplete="off" />
                                         </div>
                                         <div class="form-group">
-                                            <label for="robot-lark-app-secret">App Secret</label>
-                                            <input type="password" id="robot-lark-app-secret" placeholder="飞书应用 App Secret" autocomplete="off" />
+                                            <label for="robot-lark-app-secret" data-i18n="settings.robots.lark.appSecretLabel">App Secret</label>
+                                            <input type="password" id="robot-lark-app-secret" data-i18n="settings.robots.lark.appSecretPlaceholder" data-i18n-attr="placeholder" placeholder="飞书应用 App Secret" autocomplete="off" />
                                         </div>
                                         <div class="form-group">
-                                            <label for="robot-lark-verify-token">Verify Token（可选）</label>
-                                            <input type="text" id="robot-lark-verify-token" placeholder="事件订阅 Verification Token" autocomplete="off" />
+                                            <label for="robot-lark-verify-token" data-i18n="settings.robots.lark.verifyTokenLabel">Verify Token（可选）</label>
+                                            <input type="text" id="robot-lark-verify-token" data-i18n="settings.robots.lark.verifyTokenPlaceholder" data-i18n-attr="placeholder" placeholder="事件订阅 Verification Token" autocomplete="off" />
                                         </div>
                                     </div>
                                 </div>
 
                                 <div class="settings-subsection">
-                                    <h4>机器人命令说明</h4>
-                                    <p class="settings-description">在对话中可发送以下命令（支持中英文）：</p>
+                                    <h4 data-i18n="settingsRobotsExtra.botCommandsTitle">机器人命令说明</h4>
+                                    <p class="settings-description" data-i18n="settingsRobotsExtra.botCommandsDesc">在对话中可发送以下命令（支持中英文）：</p>
                                     <ul style="color: var(--text-muted); font-size: 13px; line-height: 1.8; margin: 8px 0 0 16px;">
-                                        <li><code>帮助</code> <code>help</code> — 显示本帮助 | Show this help</li>
-                                        <li><code>列表</code> <code>list</code> — 列出所有对话标题与 ID | List conversations</li>
-                                        <li><code>切换 &lt;ID&gt;</code> <code>switch &lt;ID&gt;</code> — 指定对话继续 | Switch to conversation</li>
-                                        <li><code>新对话</code> <code>new</code> — 开启新对话 | Start new conversation</li>
-                                        <li><code>清空</code> <code>clear</code> — 清空当前上下文 | Clear context</li>
-                                        <li><code>当前</code> <code>current</code> — 显示当前对话 ID 与标题 | Show current conversation</li>
-                                        <li><code>停止</code> <code>stop</code> — 中断当前任务 | Stop running task</li>
-                                        <li><code>角色</code> <code>roles</code> — 列出所有可用角色 | List roles</li>
-                                        <li><code>角色 &lt;名&gt;</code> <code>role &lt;name&gt;</code> — 切换当前角色 | Switch role</li>
-                                        <li><code>删除 &lt;ID&gt;</code> <code>delete &lt;ID&gt;</code> — 删除指定对话 | Delete conversation</li>
-                                        <li><code>版本</code> <code>version</code> — 显示当前版本号 | Show version</li>
+                                        <li><code>帮助</code> <code>help</code> — <span data-i18n="settingsRobotsExtra.botCmdHelp">显示本帮助 | Show this help</span></li>
+                                        <li><code>列表</code> <code>list</code> — <span data-i18n="settingsRobotsExtra.botCmdList">列出所有对话标题与 ID | List conversations</span></li>
+                                        <li><code>切换 &lt;ID&gt;</code> <code>switch &lt;ID&gt;</code> — <span data-i18n="settingsRobotsExtra.botCmdSwitch">指定对话继续 | Switch to conversation</span></li>
+                                        <li><code>新对话</code> <code>new</code> — <span data-i18n="settingsRobotsExtra.botCmdNew">开启新对话 | Start new conversation</span></li>
+                                        <li><code>清空</code> <code>clear</code> — <span data-i18n="settingsRobotsExtra.botCmdClear">清空当前上下文 | Clear context</span></li>
+                                        <li><code>当前</code> <code>current</code> — <span data-i18n="settingsRobotsExtra.botCmdCurrent">显示当前对话 ID 与标题 | Show current conversation</span></li>
+                                        <li><code>停止</code> <code>stop</code> — <span data-i18n="settingsRobotsExtra.botCmdStop">中断当前任务 | Stop running task</span></li>
+                                        <li><code>角色</code> <code>roles</code> — <span data-i18n="settingsRobotsExtra.botCmdRoles">列出所有可用角色 | List roles</span></li>
+                                        <li><code>角色 &lt;名&gt;</code> <code>role &lt;name&gt;</code> — <span data-i18n="settingsRobotsExtra.botCmdRole">切换当前角色 | Switch role</span></li>
+                                        <li><code>删除 &lt;ID&gt;</code> <code>delete &lt;ID&gt;</code> — <span data-i18n="settingsRobotsExtra.botCmdDelete">删除指定对话 | Delete conversation</span></li>
+                                        <li><code>版本</code> <code>version</code> — <span data-i18n="settingsRobotsExtra.botCmdVersion">显示当前版本号 | Show version</span></li>
                                     </ul>
-                                    <p class="settings-description" style="margin-top: 8px;">除以上命令外，直接输入内容将发送给 AI 进行渗透测试/安全分析。Otherwise, send any text for AI penetration testing / security analysis.</p>
+                                    <p class="settings-description" style="margin-top: 8px;" data-i18n="settingsRobotsExtra.botCommandsFooter">除以上命令外，直接输入内容将发送给 AI 进行渗透测试/安全分析。Otherwise, send any text for AI penetration testing / security analysis.</p>
                                 </div>
 
                                 <div class="settings-actions">
-                                    <button class="btn-primary" onclick="applySettings()">应用配置</button>
+                                    <button class="btn-primary" onclick="applySettings()" data-i18n="settings.apply.button">应用配置</button>
                                 </div>
                             </div>
 
@@ -1507,18 +1507,18 @@
     <div id="external-mcp-modal" class="modal">
         <div class="modal-content" style="max-width: 900px;">
             <div class="modal-header">
-                <h2 id="external-mcp-modal-title">添加外部MCP</h2>
+                <h2 id="external-mcp-modal-title" data-i18n="mcp.addExternalMCP">添加外部MCP</h2>
                 <span class="modal-close" onclick="closeExternalMCPModal()">&times;</span>
             </div>
             <div class="modal-body">
                 <div class="form-group">
-                    <label for="external-mcp-json">配置JSON <span style="color: red;">*</span></label>
-                    <textarea id="external-mcp-json" rows="15" placeholder='{\n  "hexstrike-ai": {\n    "command": "python3",\n    "args": ["/path/to/script.py"],\n    "description": "描述",\n    "timeout": 300\n  }\n}' style="font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace; font-size: 0.875rem; line-height: 1.5;"></textarea>
+                    <label for="external-mcp-json"><span data-i18n="externalMcpModal.configJson">配置JSON</span> <span style="color: red;">*</span></label>
+                    <textarea id="external-mcp-json" rows="15" data-i18n="externalMcpModal.placeholder" data-i18n-attr="placeholder" style="font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace; font-size: 0.875rem; line-height: 1.5;"></textarea>
                     <div class="password-hint">
-                        <strong>配置格式：</strong>JSON对象，key为配置名称，value为配置内容。状态通过"启动/停止"按钮控制，无需在JSON中配置。<br>
-                        <strong>配置示例：</strong><br>
-                        <strong>stdio模式：</strong><br>
-                        <code style="display: block; margin: 8px 0; padding: 8px; background: var(--bg-secondary); border-radius: 4px; white-space: pre-wrap;">{
+                        <strong data-i18n="externalMcpModal.formatLabel">配置格式：</strong><span data-i18n="externalMcpModal.formatDesc">JSON对象，key为配置名称，value为配置内容。状态通过"启动/停止"按钮控制，无需在JSON中配置。</span><br>
+                        <strong data-i18n="externalMcpModal.configExample">配置示例：</strong><br>
+                        <strong data-i18n="externalMcpModal.stdioMode">stdio模式：</strong><br>
+                        <code data-i18n="externalMcpModal.exampleStdio" style="display: block; margin: 8px 0; padding: 8px; background: var(--bg-secondary); border-radius: 4px; white-space: pre-wrap;">{
   "hexstrike-ai": {
     "command": "python3",
     "args": ["/path/to/script.py", "--server", "http://example.com"],
@@ -1526,15 +1526,15 @@
     "timeout": 300
   }
 }</code>
-                        <strong>HTTP模式：</strong><br>
-                        <code style="display: block; margin: 8px 0; padding: 8px; background: var(--bg-secondary); border-radius: 4px; white-space: pre-wrap;">{
+                        <strong data-i18n="externalMcpModal.httpMode">HTTP模式：</strong><br>
+                        <code data-i18n="externalMcpModal.exampleHttp" style="display: block; margin: 8px 0; padding: 8px; background: var(--bg-secondary); border-radius: 4px; white-space: pre-wrap;">{
   "cyberstrike-ai-http": {
     "transport": "http",
     "url": "http://127.0.0.1:8081/mcp"
   }
 }</code>
-                        <strong>SSE模式：</strong><br>
-                        <code style="display: block; margin: 8px 0; padding: 8px; background: var(--bg-secondary); border-radius: 4px; white-space: pre-wrap;">{
+                        <strong data-i18n="externalMcpModal.sseMode">SSE模式：</strong><br>
+                        <code data-i18n="externalMcpModal.exampleSse" style="display: block; margin: 8px 0; padding: 8px; background: var(--bg-secondary); border-radius: 4px; white-space: pre-wrap;">{
   "cyberstrike-ai-sse": {
     "transport": "sse",
     "url": "http://127.0.0.1:8081/mcp/sse"
@@ -1544,13 +1544,13 @@
                     <div id="external-mcp-json-error" class="error-message" style="display: none; margin-top: 8px; padding: 8px; background: rgba(220, 53, 69, 0.1); border: 1px solid rgba(220, 53, 69, 0.3); border-radius: 4px; color: var(--error-color); font-size: 0.875rem;"></div>
                 </div>
                 <div class="form-group">
-                    <button type="button" class="btn-secondary" onclick="formatExternalMCPJSON()" style="margin-top: 8px;">格式化JSON</button>
-                    <button type="button" class="btn-secondary" onclick="loadExternalMCPExample()" style="margin-top: 8px; margin-left: 8px;">加载示例</button>
+                    <button type="button" class="btn-secondary" onclick="formatExternalMCPJSON()" style="margin-top: 8px;" data-i18n="externalMcpModal.formatJson">格式化JSON</button>
+                    <button type="button" class="btn-secondary" onclick="loadExternalMCPExample()" style="margin-top: 8px; margin-left: 8px;" data-i18n="externalMcpModal.loadExample">加载示例</button>
                 </div>
             </div>
             <div class="modal-footer">
-                <button class="btn-secondary" onclick="closeExternalMCPModal()">取消</button>
-                <button class="btn-primary" onclick="saveExternalMCP()">保存</button>
+                <button class="btn-secondary" onclick="closeExternalMCPModal()" data-i18n="common.cancel">取消</button>
+                <button class="btn-primary" onclick="saveExternalMCP()" data-i18n="common.save">保存</button>
             </div>
         </div>
     </div>
@@ -1687,23 +1687,23 @@
     <div id="skill-modal" class="modal">
         <div class="modal-content" style="max-width: 900px;">
             <div class="modal-header">
-                <h2 id="skill-modal-title">添加Skill</h2>
+                <h2 id="skill-modal-title" data-i18n="skillModal.addSkill">添加Skill</h2>
                 <span class="modal-close" onclick="closeSkillModal()">&times;</span>
             </div>
             <div class="modal-body">
                 <div class="form-group">
-                    <label for="skill-name">Skill名称 <span style="color: red;">*</span></label>
-                    <input type="text" id="skill-name" placeholder="例如: sql-injection-testing" required />
-                    <small class="form-hint">只能包含字母、数字、连字符和下划线</small>
+                    <label for="skill-name"><span data-i18n="skillModal.skillName">Skill名称</span> <span style="color: red;">*</span></label>
+                    <input type="text" id="skill-name" data-i18n="skillModal.skillNamePlaceholder" data-i18n-attr="placeholder" placeholder="例如: sql-injection-testing" required />
+                    <small class="form-hint" data-i18n="skillModal.skillNameHint">只能包含字母、数字、连字符和下划线</small>
                 </div>
                 <div class="form-group">
-                    <label for="skill-description">描述</label>
-                    <input type="text" id="skill-description" placeholder="Skill的简短描述" />
+                    <label for="skill-description" data-i18n="skillModal.description">描述</label>
+                    <input type="text" id="skill-description" data-i18n="skillModal.descriptionPlaceholder" data-i18n-attr="placeholder" placeholder="Skill的简短描述" />
                 </div>
                 <div class="form-group">
-                    <label for="skill-content">内容（Markdown格式） <span style="color: red;">*</span></label>
-                    <textarea id="skill-content" rows="20" placeholder="输入skill内容，支持Markdown格式..." style="font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace; font-size: 0.875rem; line-height: 1.5;" required></textarea>
-                    <small class="form-hint">支持YAML front matter格式（可选），例如：<br>
+                    <label for="skill-content"><span data-i18n="skillModal.contentLabel">内容（Markdown格式）</span> <span style="color: red;">*</span></label>
+                    <textarea id="skill-content" rows="20" data-i18n="skillModal.contentPlaceholder" data-i18n-attr="placeholder" placeholder="输入skill内容，支持Markdown格式..." style="font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace; font-size: 0.875rem; line-height: 1.5;" required></textarea>
+                    <small class="form-hint"><span data-i18n="skillModal.contentHint">支持YAML front matter格式（可选），例如：</span><br>
 ---<br>
 name: skill-name<br>
 description: Skill描述<br>
@@ -1714,8 +1714,8 @@ version: 1.0.0<br>
                 </div>
             </div>
             <div class="modal-footer">
-                <button class="btn-secondary" onclick="closeSkillModal()">取消</button>
-                <button class="btn-primary" onclick="saveSkill()">保存</button>
+                <button class="btn-secondary" onclick="closeSkillModal()" data-i18n="common.cancel">取消</button>
+                <button class="btn-primary" onclick="saveSkill()" data-i18n="common.save">保存</button>
             </div>
         </div>
     </div>
@@ -2094,7 +2094,7 @@ version: 1.0.0<br>
     <div id="role-select-modal" class="modal">
         <div class="modal-content role-select-modal-content">
             <div class="modal-header">
-                <h2>选择角色</h2>
+                <h2 data-i18n="chatGroup.rolePanelTitle">选择角色</h2>
                 <span class="modal-close" onclick="closeRoleSelectModal()">&times;</span>
             </div>
             <div class="modal-body role-select-body">
@@ -2107,49 +2107,49 @@ version: 1.0.0<br>
     <div id="role-modal" class="modal">
         <div class="modal-content" style="max-width: 900px;">
             <div class="modal-header">
-                <h2 id="role-modal-title">添加角色</h2>
+                <h2 id="role-modal-title" data-i18n="roleModal.addRole">添加角色</h2>
                 <span class="modal-close" onclick="closeRoleModal()">&times;</span>
             </div>
             <div class="modal-body">
                 <div class="form-group">
-                    <label for="role-name">角色名称 <span style="color: red;">*</span></label>
-                    <input type="text" id="role-name" placeholder="输入角色名称" required />
+                    <label for="role-name"><span data-i18n="roleModal.roleName">角色名称</span> <span style="color: red;">*</span></label>
+                    <input type="text" id="role-name" data-i18n="roleModal.roleNamePlaceholder" data-i18n-attr="placeholder" placeholder="输入角色名称" required />
                 </div>
                 <div class="form-group">
-                    <label for="role-description">角色描述</label>
-                    <input type="text" id="role-description" placeholder="输入角色描述" />
+                    <label for="role-description" data-i18n="roleModal.roleDescription">角色描述</label>
+                    <input type="text" id="role-description" data-i18n="roleModal.roleDescriptionPlaceholder" data-i18n-attr="placeholder" placeholder="输入角色描述" />
                 </div>
                 <div class="form-group">
-                    <label for="role-icon">角色图标</label>
-                    <input type="text" id="role-icon" placeholder="输入emoji图标，例如: 🏆" maxlength="10" />
-                    <small class="form-hint">输入一个emoji作为角色的图标，将显示在角色选择器中。</small>
+                    <label for="role-icon" data-i18n="roleModal.roleIcon">角色图标</label>
+                    <input type="text" id="role-icon" data-i18n="roleModal.roleIconPlaceholder" data-i18n-attr="placeholder" placeholder="输入emoji图标，例如: 🏆" maxlength="10" />
+                    <small class="form-hint" data-i18n="roleModal.roleIconHint">输入一个emoji作为角色的图标，将显示在角色选择器中。</small>
                 </div>
                 <div class="form-group">
-                    <label for="role-user-prompt">用户提示词</label>
-                    <textarea id="role-user-prompt" rows="10" placeholder="输入用户提示词，会在用户消息前追加此提示词..."></textarea>
-                    <small class="form-hint">此提示词会追加到用户消息前，用于指导AI的行为。注意：这不会修改系统提示词。</small>
+                    <label for="role-user-prompt" data-i18n="roleModal.userPrompt">用户提示词</label>
+                    <textarea id="role-user-prompt" rows="10" data-i18n="roleModal.userPromptPlaceholder" data-i18n-attr="placeholder" placeholder="输入用户提示词，会在用户消息前追加此提示词..."></textarea>
+                    <small class="form-hint" data-i18n="roleModal.userPromptHint">此提示词会追加到用户消息前，用于指导AI的行为。注意：这不会修改系统提示词。</small>
                 </div>
                 <div class="form-group" id="role-tools-section">
-                    <label>关联的工具（可选）</label>
+                    <label data-i18n="roleModal.relatedTools">关联的工具（可选）</label>
                     <div id="role-tools-default-hint" class="role-tools-default-hint" style="display: none;">
                         <div class="role-tools-default-info">
                             <span class="role-tools-default-icon">ℹ️</span>
                             <div class="role-tools-default-content">
-                                <div class="role-tools-default-title">默认角色使用所有工具</div>
-                                <div class="role-tools-default-desc">默认角色会自动使用MCP管理中启用的所有工具，无需单独配置。</div>
+                                <div class="role-tools-default-title" data-i18n="roleModal.defaultRoleToolsTitle">默认角色使用所有工具</div>
+                                <div class="role-tools-default-desc" data-i18n="roleModal.defaultRoleToolsDesc">默认角色会自动使用MCP管理中启用的所有工具，无需单独配置。</div>
                             </div>
                         </div>
                     </div>
                     <div class="role-tools-controls">
                         <div class="role-tools-actions">
-                            <button type="button" class="btn-secondary" onclick="selectAllRoleTools()">全选</button>
-                            <button type="button" class="btn-secondary" onclick="deselectAllRoleTools()">全不选</button>
+                            <button type="button" class="btn-secondary" onclick="selectAllRoleTools()" data-i18n="roleModal.selectAll">全选</button>
+                            <button type="button" class="btn-secondary" onclick="deselectAllRoleTools()" data-i18n="roleModal.deselectAll">全不选</button>
                             <div class="role-tools-search-box">
-                                <input type="text" id="role-tools-search" placeholder="搜索工具..." 
+                                <input type="text" id="role-tools-search" data-i18n="roleModal.searchToolsPlaceholder" data-i18n-attr="placeholder" placeholder="搜索工具..." 
                                        oninput="searchRoleTools(this.value)" 
                                        onkeypress="if(event.key === 'Enter') searchRoleTools(this.value)" />
                                 <button class="role-tools-search-clear" id="role-tools-search-clear" 
-                                        onclick="clearRoleToolsSearch()" style="display: none;" title="清除搜索">
+                                        onclick="clearRoleToolsSearch()" style="display: none;" data-i18n="common.clearSearch" data-i18n-attr="title" title="清除搜索">
                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                         <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
                                         <path d="M15 9l-6 6M9 9l6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
@@ -2160,22 +2160,22 @@ version: 1.0.0<br>
                         <div id="role-tools-stats" class="role-tools-stats"></div>
                     </div>
                     <div id="role-tools-list" class="role-tools-list">
-                        <div class="tools-loading">正在加载工具列表...</div>
+                        <div class="tools-loading" data-i18n="roleModal.loadingTools">正在加载工具列表...</div>
                     </div>
-                    <small class="form-hint">勾选要关联的工具，留空则使用MCP管理中的全部工具配置。</small>
+                    <small class="form-hint" data-i18n="roleModal.relatedToolsHint">勾选要关联的工具，留空则使用MCP管理中的全部工具配置。</small>
                 </div>
                 <div class="form-group" id="role-skills-section">
-                    <label>关联的Skills（可选）</label>
+                    <label data-i18n="roleModal.relatedSkills">关联的Skills（可选）</label>
                     <div class="role-skills-controls">
                         <div class="role-skills-actions">
-                            <button type="button" class="btn-secondary" onclick="selectAllRoleSkills()">全选</button>
-                            <button type="button" class="btn-secondary" onclick="deselectAllRoleSkills()">全不选</button>
+                            <button type="button" class="btn-secondary" onclick="selectAllRoleSkills()" data-i18n="roleModal.selectAll">全选</button>
+                            <button type="button" class="btn-secondary" onclick="deselectAllRoleSkills()" data-i18n="roleModal.deselectAll">全不选</button>
                             <div class="role-skills-search-box">
-                                <input type="text" id="role-skills-search" placeholder="搜索skill..." 
+                                <input type="text" id="role-skills-search" data-i18n="roleModal.searchSkillsPlaceholder" data-i18n-attr="placeholder" placeholder="搜索skill..." 
                                        oninput="searchRoleSkills(this.value)" 
                                        onkeypress="if(event.key === 'Enter') searchRoleSkills(this.value)" />
                                 <button class="role-skills-search-clear" id="role-skills-search-clear" 
-                                        onclick="clearRoleSkillsSearch()" style="display: none;" title="清除搜索">
+                                        onclick="clearRoleSkillsSearch()" style="display: none;" data-i18n="common.clearSearch" data-i18n-attr="title" title="清除搜索">
                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                         <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
                                         <path d="M15 9l-6 6M9 9l6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
@@ -2186,21 +2186,21 @@ version: 1.0.0<br>
                         <div id="role-skills-stats" class="role-skills-stats"></div>
                     </div>
                     <div id="role-skills-list" class="role-skills-list">
-                        <div class="skills-loading">正在加载skills列表...</div>
+                        <div class="skills-loading" data-i18n="roleModal.loadingSkills">正在加载skills列表...</div>
                     </div>
-                    <small class="form-hint">勾选要关联的skills，这些skills的内容会在执行任务前注入到系统提示词中，帮助AI更好地理解相关专业知识。</small>
+                    <small class="form-hint" data-i18n="roleModal.relatedSkillsHint">勾选要关联的skills，这些skills的内容会在执行任务前注入到系统提示词中，帮助AI更好地理解相关专业知识。</small>
                 </div>
                 <div class="form-group">
                     <label class="checkbox-label">
                         <input type="checkbox" id="role-enabled" class="modern-checkbox" checked />
                         <span class="checkbox-custom"></span>
-                        <span class="checkbox-text">启用此角色</span>
+                        <span class="checkbox-text" data-i18n="roleModal.enableRole">启用此角色</span>
                     </label>
                 </div>
             </div>
             <div class="modal-footer">
-                <button class="btn-secondary" onclick="closeRoleModal()">取消</button>
-                <button class="btn-primary" onclick="saveRole()">保存</button>
+                <button class="btn-secondary" onclick="closeRoleModal()" data-i18n="common.cancel">取消</button>
+                <button class="btn-primary" onclick="saveRole()" data-i18n="common.save">保存</button>
             </div>
         </div>
     </div>

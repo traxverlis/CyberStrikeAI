@@ -14,7 +14,8 @@
     "confirm": "Confirm",
     "copy": "Copy",
     "copied": "Copied",
-    "copyFailed": "Copy failed"
+    "copyFailed": "Copy failed",
+    "view": "View"
   },
   "header": {
     "title": "CyberStrikeAI",
@@ -340,6 +341,7 @@
     "configStdioNeedCommand": "Config error: \"{{name}}\" stdio mode needs command",
     "configHttpNeedUrl": "Config error: \"{{name}}\" http mode needs url",
     "configSseNeedUrl": "Config error: \"{{name}}\" sse mode needs url",
+    "configEditMustContainName": "Config error: In edit mode, JSON must contain config name \"{{name}}\"",
     "saveSuccess": "Saved",
     "deleteSuccess": "Deleted",
     "deleteExternalConfirm": "Delete external MCP \"{{name}}\"?",
@@ -364,15 +366,36 @@
       "description": "Configure WeCom, DingTalk and Lark bots so you can chat with CyberStrikeAI on your phone without opening the web UI.",
       "wecom": {
         "title": "WeCom",
-        "enabled": "Enable WeCom bot"
+        "enabled": "Enable WeCom bot",
+        "token": "Token",
+        "tokenPlaceholder": "Token",
+        "encodingAesKey": "EncodingAESKey",
+        "encodingAesKeyPlaceholder": "EncodingAESKey (leave empty for plain mode)",
+        "corpId": "CorpID",
+        "corpIdPlaceholder": "Corp ID",
+        "secret": "Secret",
+        "secretPlaceholder": "App Secret",
+        "agentId": "AgentID",
+        "agentIdPlaceholder": "App AgentId"
       },
       "dingtalk": {
         "title": "DingTalk",
-        "enabled": "Enable DingTalk bot"
+        "enabled": "Enable DingTalk bot",
+        "clientIdLabel": "Client ID (AppKey)",
+        "clientIdPlaceholder": "DingTalk App Key",
+        "clientSecretLabel": "Client Secret",
+        "clientSecretPlaceholder": "DingTalk App Secret",
+        "streamHint": "Enable bot capability and configure streaming access in the open platform."
       },
       "lark": {
         "title": "Lark",
-        "enabled": "Enable Lark bot"
+        "enabled": "Enable Lark bot",
+        "appIdLabel": "App ID",
+        "appIdPlaceholder": "Lark/Feishu App ID",
+        "appSecretLabel": "App Secret",
+        "appSecretPlaceholder": "Lark/Feishu App Secret",
+        "verifyTokenLabel": "Verify Token (Optional)",
+        "verifyTokenPlaceholder": "Event subscription Verification Token"
       }
     },
     "apply": {
@@ -414,7 +437,15 @@
     "title": "Role management",
     "createRole": "Create role",
     "searchPlaceholder": "Search roles...",
-    "deleteConfirm": "Delete this role?"
+    "deleteConfirm": "Delete this role?",
+    "loadFailed": "Failed to load roles",
+    "noDescription": "No description",
+    "defaultRoleDescription": "Default role, no extra user prompt, uses default MCP",
+    "noMatchingRoles": "No matching roles",
+    "noRoles": "No roles",
+    "enabled": "Enabled",
+    "disabled": "Disabled",
+    "noDescriptionShort": "No description"
   },
   "skills": {
     "title": "Skills management",
@@ -436,7 +467,36 @@
     "loadStatsFailed": "Failed to load skills monitor data",
     "clearStatsConfirm": "Clear all Skills statistics? This cannot be undone.",
     "statsCleared": "Skills statistics cleared",
-    "clearStatsFailed": "Failed to clear statistics"
+    "clearStatsFailed": "Failed to clear statistics",
+    "noDescription": "No description",
+    "viewSkillTitle": "View Skill: {{name}}",
+    "descriptionLabel": "Description:",
+    "pathLabel": "Path:",
+    "modTimeLabel": "Modified:",
+    "contentLabel": "Content:",
+    "nameRequired": "Skill name is required",
+    "contentRequired": "Skill content is required",
+    "nameInvalid": "Skill name can only contain letters, numbers, hyphens and underscores",
+    "saveSuccess": "Skill updated",
+    "createdSuccess": "Skill created",
+    "deleteConfirm": "Are you sure you want to delete skill \"{{name}}\"? This cannot be undone.",
+    "deleteConfirmWithRoles": "Are you sure you want to delete skill \"{{name}}\"?\n\n⚠️ This skill is currently bound to {{count}} role(s):\n{{roles}}\n\nAfter deletion, the system will automatically remove this skill from those roles.\n\nThis cannot be undone. Continue?",
+    "deleteSuccess": "Skill deleted",
+    "deleteSuccessWithRoles": "Skill deleted and automatically removed from {{count}} role(s): {{roles}}",
+    "loadFailedShort": "Load failed",
+    "totalSkillsCount": "Total Skills",
+    "totalCallsCount": "Total Call Count",
+    "successfulCalls": "Successful Calls",
+    "failedCalls": "Failed Calls",
+    "successRate": "Success Rate",
+    "skillName": "Skill Name",
+    "totalCalls": "Total Calls",
+    "success": "Success",
+    "failure": "Failure",
+    "lastCallTime": "Last Call Time",
+    "noCallRecords": "No Skills call records yet",
+    "loadStatsErrorShort": "Failed to load statistics",
+    "loadCallStatsError": "Failed to load call statistics"
   },
   "apiDocs": {
     "curlCopied": "curl command copied to clipboard!"
@@ -580,6 +640,15 @@
     "presetLogin": "Login page + China",
     "presetDomain": "By domain",
     "presetIp": "By IP",
+    "queryPresetsAria": "FOFA query presets",
+    "fieldsPresetsAria": "FOFA field presets",
+    "resultsToolbarAria": "Results toolbar",
+    "fillExample": "Fill example",
+    "parseBtnTitle": "Parse natural language to FOFA query",
+    "minFieldsTitle": "For quick export",
+    "webCommonTitle": "For browsing and filtering",
+    "intelEnhancedTitle": "More fingerprint/intel",
+    "fullLabel": "full",
     "nlPlaceholder": "e.g. Apache sites in Missouri, US, title contains Home",
     "showHideColumns": "Show/hide columns",
     "exportCsvTitle": "Export results as CSV (UTF-8)",
@@ -617,7 +686,14 @@
     "clearStatsTitle": "Clear all statistics",
     "skillsCallStats": "Skills call stats",
     "searchPlaceholder": "Search Skills...",
-    "loading": "Loading..."
+    "loading": "Loading...",
+    "paginationShow": "Show {{start}}-{{end}} of {{total}}",
+    "perPageLabel": "Per page",
+    "firstPage": "First",
+    "prevPage": "Previous",
+    "pageOf": "Page {{current}} / {{total}}",
+    "nextPage": "Next",
+    "lastPage": "Last"
   },
   "settingsBasic": {
     "basicTitle": "Basic settings",
@@ -702,8 +778,20 @@
     "changePasswordBtn": "Change password"
   },
   "settingsRobotsExtra": {
-    "botCommandsTitle": "Bot commands",
-    "botCommandsDesc": "You can send these commands in chat (Chinese and English supported):"
+    "botCommandsTitle": "Bot command instructions",
+    "botCommandsDesc": "You can send the following commands in chat (Chinese and English supported):",
+    "botCmdHelp": "Show this help",
+    "botCmdList": "List conversations",
+    "botCmdSwitch": "Switch to conversation",
+    "botCmdNew": "Start new conversation",
+    "botCmdClear": "Clear context",
+    "botCmdCurrent": "Show current conversation",
+    "botCmdStop": "Stop running task",
+    "botCmdRoles": "List roles",
+    "botCmdRole": "Switch role",
+    "botCmdDelete": "Delete conversation",
+    "botCmdVersion": "Show version",
+    "botCommandsFooter": "Otherwise, send any text for AI penetration testing / security analysis."
   },
   "mcpDetailModal": {
     "title": "Tool call details",
@@ -752,6 +840,15 @@
     "configJson": "Config JSON",
     "formatLabel": "Format:",
     "formatDesc": "JSON object; key = config name, value = config. Use Start/Stop buttons to control state.",
+    "configExample": "Configuration example:",
+    "stdioMode": "stdio mode:",
+    "httpMode": "HTTP mode:",
+    "sseMode": "SSE mode:",
+    "placeholder": "{\n  \"hexstrike-ai\": {\n    \"command\": \"python3\",\n    \"args\": [\"/path/to/script.py\"],\n    \"description\": \"Description\",\n    \"timeout\": 300\n  }\n}",
+    "exampleStdio": "{\n  \"hexstrike-ai\": {\n    \"command\": \"python3\",\n    \"args\": [\"/path/to/script.py\", \"--server\", \"http://example.com\"],\n    \"description\": \"Description\",\n    \"timeout\": 300\n  }\n}",
+    "exampleHttp": "{\n  \"cyberstrike-ai-http\": {\n    \"transport\": \"http\",\n    \"url\": \"http://127.0.0.1:8081/mcp\"\n  }\n}",
+    "exampleSse": "{\n  \"cyberstrike-ai-sse\": {\n    \"transport\": \"sse\",\n    \"url\": \"http://127.0.0.1:8081/mcp/sse\"\n  }\n}",
+    "exampleDescription": "Example description",
     "formatJson": "Format JSON",
     "loadExample": "Load example"
   },
@@ -765,7 +862,7 @@
     "descriptionPlaceholder": "Short description",
     "contentLabel": "Content (Markdown)",
     "contentPlaceholder": "Enter skill content in Markdown...",
-    "contentHint": "YAML front matter supported (optional)"
+    "contentHint": "YAML front matter supported (optional), e.g.:"
   },
   "knowledgeItemModal": {
     "addKnowledge": "Add knowledge",
@@ -920,6 +1017,33 @@
     "searchSkillsPlaceholder": "Search skill...",
     "loadingSkills": "Loading skills...",
     "relatedSkillsHint": "Selected skills are injected into system prompt before task execution.",
-    "enableRole": "Enable this role"
+    "enableRole": "Enable this role",
+    "selectAll": "Select All",
+    "deselectAll": "Deselect All",
+    "roleNameRequired": "Role name is required",
+    "roleNotFound": "Role not found",
+    "firstRoleNoToolsHint": "First role with no tools selected will use all tools by default.",
+    "currentPageSelected": "Current page: {{current}} / {{total}}",
+    "totalSelected": "Total selected: {{current}} / {{total}}",
+    "usingAllEnabledTools": "(Using all enabled tools)",
+    "currentPageSelectedTitle": "Selected on current page (enabled tools only)",
+    "totalSelectedTitle": "Total tools linked to this role",
+    "skillsSelectedCount": "Selected {{count}} / {{total}}",
+    "loadToolsFailed": "Failed to load tools",
+    "loadSkillsFailed": "Failed to load skills",
+    "cannotDeleteDefaultRole": "Cannot delete default role",
+    "noMatchingSkills": "No matching skills",
+    "noSkillsAvailable": "No skills available",
+    "usingAllTools": "Use all tools",
+    "andNMore": " and {{count}} more",
+    "toolsLabel": "Tools:",
+    "noTools": "No tools",
+    "paginationShow": "{{start}}-{{end}} of {{total}} tools",
+    "paginationSearch": " (search: \"{{keyword}}\")",
+    "firstPage": "First",
+    "prevPage": "Previous",
+    "pageOf": "Page {{page}} / {{total}}",
+    "nextPage": "Next",
+    "lastPage": "Last"
   }
 }
