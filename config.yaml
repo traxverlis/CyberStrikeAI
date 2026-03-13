@@ -59,8 +59,9 @@ fofa:
 agent:
   max_iterations: 120           # 最大迭代次数，AI 代理最多执行多少轮工具调用
   large_result_threshold: 102400 # 大结果阈值（字节），默认50KB，超过此大小会自动保存到存储
-  result_storage_dir: tmp        # 结果存储目录，大结果会保存在此目录下
-
+  result_storage_dir: tmp # 结果存储目录，大结果会保存在此目录下
+  tool_timeout_minutes: 30 # 单次工具执行最大时长（分钟），超时自动终止；0 表示不限制（不推荐，易出现长时间挂起）
+  
 # 数据库配置
 database:
   path: data/conversations.db    # SQLite 数据库文件路径，用于存储对话历史和消息
