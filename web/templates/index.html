@@ -1013,7 +1013,7 @@
                     <div class="page-header">
                         <h2 data-i18n="chatFilesPage.title">文件管理</h2>
                         <div class="page-header-actions">
-                            <button type="button" class="btn-primary" onclick="document.getElementById('chat-files-upload-input').click()" data-i18n="chatFilesPage.upload">上传文件</button>
+                            <button type="button" class="btn-primary" onclick="chatFilesOpenUploadPicker()" data-i18n="chatFilesPage.upload">上传文件</button>
                             <input type="file" id="chat-files-upload-input" style="display:none" onchange="onChatFilesUploadPick(event)" />
                             <button class="btn-secondary" onclick="loadChatFilesPage()" data-i18n="common.refresh">刷新</button>
                         </div>
@@ -1028,6 +1028,15 @@
                             <label style="flex:1;min-width:180px;max-width:360px;">
                                 <span data-i18n="chatFilesPage.searchName">文件名</span>
                                 <input type="text" id="chat-files-filter-name" class="form-control" data-i18n="chatFilesPage.searchNamePlaceholder" data-i18n-attr="placeholder" placeholder="筛选文件名" oninput="chatFilesFilterNameOnInput()" onkeydown="if(event.key==='Enter') loadChatFilesPage()" />
+                            </label>
+                            <label>
+                                <span data-i18n="chatFilesPage.groupBy">分组</span>
+                                <select id="chat-files-group-by" class="form-control" onchange="chatFilesGroupByChange()">
+                                    <option value="none" data-i18n="chatFilesPage.groupNone">不分组</option>
+                                    <option value="date" data-i18n="chatFilesPage.groupByDate">按日期</option>
+                                    <option value="conversation" data-i18n="chatFilesPage.groupByConversation">按会话</option>
+                                    <option value="folder" data-i18n="chatFilesPage.groupByFolder">按文件夹</option>
+                                </select>
                             </label>
                             <button class="btn-secondary" type="button" onclick="loadChatFilesPage()" data-i18n="common.search">搜索</button>
                         </div>

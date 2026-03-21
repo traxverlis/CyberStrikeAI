@@ -12900,6 +12900,267 @@ header {
     border-radius: 8px;
 }
 
+/* 分组视图：外层不再套一层大边框，由各分组卡片承担 */
+.chat-files-table-wrap.chat-files-table-wrap--grouped {
+    border: none;
+    background: transparent;
+    overflow: visible;
+}
+
+/* GitHub 式：单表 + 首列缩进，无嵌套子表、无重复表头 */
+.chat-files-table-wrap.chat-files-table-wrap--tree {
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--bg-primary);
+    overflow-x: auto;
+}
+
+.chat-files-browse-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.chat-files-browse-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px 16px;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border-color);
+    background: var(--bg-secondary, #f8f9fa);
+}
+
+.chat-files-breadcrumb {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 2px;
+    font-size: 0.8125rem;
+    line-height: 1.4;
+    flex: 1;
+    min-width: 0;
+}
+
+.chat-files-breadcrumb-link {
+    border: none;
+    background: none;
+    padding: 2px 4px;
+    margin: 0;
+    font: inherit;
+    color: var(--accent-color);
+    cursor: pointer;
+    border-radius: 4px;
+    max-width: 100%;
+    text-align: left;
+    word-break: break-all;
+}
+
+.chat-files-breadcrumb-link:hover {
+    text-decoration: underline;
+}
+
+.chat-files-breadcrumb-sep {
+    color: var(--text-secondary);
+    user-select: none;
+    padding: 0 2px;
+}
+
+.chat-files-breadcrumb-current {
+    color: var(--text-primary);
+    font-weight: 600;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    word-break: break-all;
+}
+
+.chat-files-browse-up {
+    flex-shrink: 0;
+}
+
+.chat-files-browse-up:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.chat-files-tr-folder--nav {
+    cursor: pointer;
+}
+
+.chat-files-tr-folder--nav:hover {
+    background: rgba(0, 102, 255, 0.06);
+}
+
+.chat-files-folder-empty {
+    text-align: center;
+    color: var(--text-secondary);
+    padding: 24px 12px !important;
+}
+
+.chat-files-table--tree-flat {
+    font-size: 0.8125rem;
+}
+
+.chat-files-table--tree-flat thead th {
+    background: var(--bg-secondary, #f8f9fa);
+}
+
+.chat-files-table--tree-flat .chat-files-tr-folder {
+    background: var(--bg-primary);
+}
+
+.chat-files-table--tree-flat .chat-files-tr-folder .chat-files-tree-name-cell--folder {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.chat-files-table--tree-flat .chat-files-tr-file:hover {
+    background: rgba(128, 128, 128, 0.04);
+}
+
+.chat-files-tree-icon {
+    flex-shrink: 0;
+    color: var(--accent-color);
+    opacity: 1;
+}
+
+.chat-files-tree-icon path {
+    fill: var(--bg-primary);
+    stroke: var(--accent-color);
+}
+
+.chat-files-tree-file-icon {
+    flex-shrink: 0;
+    color: var(--text-secondary);
+    opacity: 0.85;
+}
+
+.chat-files-tree-name-cell {
+    max-width: min(100%, 560px);
+    vertical-align: middle;
+}
+
+.chat-files-tree-name-inner {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+}
+
+.chat-files-tree-name-text {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 0.8125rem;
+    word-break: break-all;
+    line-height: 1.35;
+}
+
+.chat-files-tree-muted {
+    color: var(--text-secondary);
+    font-size: 0.8125rem;
+}
+
+.chat-files-path-breadcrumb {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 2px;
+    line-height: 1.45;
+    max-width: 100%;
+}
+
+.chat-files-path-sep {
+    color: var(--text-secondary);
+    font-weight: 500;
+    user-select: none;
+    padding: 0 2px;
+}
+
+.chat-files-path-crumb {
+    color: var(--text-primary);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 0.8rem;
+}
+
+.chat-files-path-root {
+    color: var(--text-secondary);
+    font-size: 0.8125rem;
+}
+
+.chat-files-grouped {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.chat-files-group {
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--bg-primary);
+    overflow: hidden;
+}
+
+.chat-files-group > summary.chat-files-group-summary {
+    list-style: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    background: var(--bg-secondary, #f8f9fa);
+    font-weight: 600;
+    font-size: 0.875rem;
+    color: var(--text-primary);
+    user-select: none;
+}
+
+.chat-files-group > summary.chat-files-group-summary::-webkit-details-marker {
+    display: none;
+}
+
+.chat-files-group > summary.chat-files-group-summary::before {
+    content: '';
+    display: inline-block;
+    width: 0;
+    height: 0;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 6px solid var(--text-secondary);
+    margin-right: 2px;
+    transform: rotate(-90deg);
+    transition: transform 0.15s ease;
+    flex-shrink: 0;
+}
+
+.chat-files-group[open] > summary.chat-files-group-summary::before {
+    transform: rotate(0deg);
+}
+
+.chat-files-group-title {
+    flex: 1;
+    min-width: 0;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 0.8125rem;
+}
+
+.chat-files-group-count {
+    flex-shrink: 0;
+    font-weight: 500;
+    color: var(--text-secondary);
+    font-size: 0.8125rem;
+}
+
+.chat-files-group-body {
+    overflow-x: auto;
+    border-top: 1px solid var(--border-color);
+}
+
+.chat-files-group-body .chat-files-table {
+    border-radius: 0;
+}
+
+.chat-files-group-body .chat-files-table th {
+    background: var(--bg-primary);
+}
+
 .chat-files-table {
     width: 100%;
     border-collapse: collapse;
@@ -12939,6 +13200,19 @@ header {
     text-overflow: ellipsis;
     white-space: nowrap;
     vertical-align: bottom;
+}
+
+.chat-files-cell-subpath {
+    max-width: 280px;
+    font-size: 0.8125rem;
+    color: var(--text-secondary);
+    vertical-align: middle;
+}
+
+.chat-files-group-title--folder {
+    white-space: normal;
+    word-break: break-all;
+    line-height: 1.35;
 }
 
 .chat-files-actions {

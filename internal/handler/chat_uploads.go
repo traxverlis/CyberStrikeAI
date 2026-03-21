@@ -74,6 +74,8 @@ type ChatUploadFileItem struct {
 	ModifiedUnix   int64  `json:"modifiedUnix"`
 	Date           string `json:"date"`
 	ConversationID string `json:"conversationId"`
+	// SubPath 为日期、会话目录之下的子路径（不含文件名），如 date/conv/a/b/file 则为 "a/b"；无嵌套则为 ""。
+	SubPath string `json:"subPath"`
 }
 
 // List GET /api/chat-uploads
@@ -113,6 +115,10 @@ func (h *ChatUploadsHandler) List(c *gin.Context) {
 		if len(parts) >= 3 {
 			convID = parts[1]
 		}
+		var subPath string
+		if len(parts) >= 4 {
+			subPath = strings.Join(parts[2:len(parts)-1], "/")
+		}
 		if conversationFilter != "" && convID != conversationFilter {
 			return nil
 		}
@@ -125,6 +131,7 @@ func (h *ChatUploadsHandler) List(c *gin.Context) {
 			ModifiedUnix:   info.ModTime().Unix(),
 			Date:           dateStr,
 			ConversationID: convID,
+			SubPath:        subPath,
 		})
 		return nil
 	})
@@ -171,13 +178,29 @@ func (h *ChatUploadsHandler) Delete(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	if err := os.Remove(abs); err != nil {
+	st, err := os.Stat(abs)
+	if err != nil {
 		if os.IsNotExist(err) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "file not found"})
 			return
 		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
+	}
+	if st.IsDir() {
+		if err := os.RemoveAll(abs); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+	} else {
+		if err := os.Remove(abs); err != nil {
+			if os.IsNotExist(err) {
+				c.JSON(http.StatusNotFound, gin.H{"error": "file not found"})
+				return
+			}
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
 	}
 	c.JSON(http.StatusOK, gin.H{"ok": true})
 }
@@ -295,30 +318,57 @@ func chatUploadShortRand(n int) string {
 	return string(b)
 }
 
-// Upload POST /api/chat-uploads （multipart: file, conversationId 可选）
+// Upload POST /api/chat-uploads multipart: file；conversationId 可选；relativeDir 可选（chat_uploads 下目录的相对路径，将文件直接上传至该目录）
 func (h *ChatUploadsHandler) Upload(c *gin.Context) {
 	fh, err := c.FormFile("file")
 	if err != nil || fh == nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "missing file"})
 		return
 	}
-	convID := strings.TrimSpace(c.PostForm("conversationId"))
-	convDir := convID
-	if convDir == "" {
-		convDir = "_manual"
-	} else {
-		convDir = strings.ReplaceAll(convDir, string(filepath.Separator), "_")
-	}
 	root, err := h.absRoot()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	dateStr := time.Now().Format("2006-01-02")
-	targetDir := filepath.Join(root, dateStr, convDir)
-	if err := os.MkdirAll(targetDir, 0755); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
+
+	var targetDir string
+	targetRel := strings.TrimSpace(c.PostForm("relativeDir"))
+	if targetRel != "" {
+		absDir, err := h.resolveUnderChatUploads(targetRel)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		st, err := os.Stat(absDir)
+		if err != nil {
+			if os.IsNotExist(err) {
+				if err := os.MkdirAll(absDir, 0755); err != nil {
+					c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+					return
+				}
+			} else {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+				return
+			}
+		} else if !st.IsDir() {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "relativeDir is not a directory"})
+			return
+		}
+		targetDir = absDir
+	} else {
+		convID := strings.TrimSpace(c.PostForm("conversationId"))
+		convDir := convID
+		if convDir == "" {
+			convDir = "_manual"
+		} else {
+			convDir = strings.ReplaceAll(convDir, string(filepath.Separator), "_")
+		}
+		dateStr := time.Now().Format("2006-01-02")
+		targetDir = filepath.Join(root, dateStr, convDir)
+		if err := os.MkdirAll(targetDir, 0755); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
 	}
 	baseName := filepath.Base(fh.Filename)
 	if baseName == "" || baseName == "." {
