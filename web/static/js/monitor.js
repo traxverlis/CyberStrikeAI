@@ -691,6 +691,9 @@ function handleStreamEvent(event, progressElement, progressId,
     };
     
     switch (event.type) {
+        case 'heartbeat':
+            // SSE 长连接保活，无需更新 UI
+            break;
         case 'conversation':
             if (event.data && event.data.conversationId) {
                 // 在更新之前，先获取任务对应的原始对话ID
