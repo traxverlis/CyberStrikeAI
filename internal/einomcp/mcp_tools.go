@@ -92,6 +92,19 @@ func (m *mcpBridgeTool) Info(ctx context.Context) (*schema.ToolInfo, error) {
 
 func (m *mcpBridgeTool) InvokableRun(ctx context.Context, argumentsInJSON string, opts ...tool.Option) (string, error) {
 	_ = opts
+	return runMCPToolInvocation(ctx, m.agent, m.holder, m.name, argumentsInJSON, m.record, m.chunk)
+}
+
+// runMCPToolInvocation 与 mcpBridgeTool.InvokableRun 共用。
+func runMCPToolInvocation(
+	ctx context.Context,
+	ag *agent.Agent,
+	holder *ConversationHolder,
+	toolName string,
+	argumentsInJSON string,
+	record ExecutionRecorder,
+	chunk func(toolName, toolCallID, chunk string),
+) (string, error) {
 	var args map[string]interface{}
 	if argumentsInJSON != "" && argumentsInJSON != "null" {
 		if err := json.Unmarshal([]byte(argumentsInJSON), &args); err != nil {
@@ -102,44 +115,62 @@ func (m *mcpBridgeTool) InvokableRun(ctx context.Context, argumentsInJSON string
 		args = map[string]interface{}{}
 	}
 
-	// Stream tool output (stdout/stderr) to upper layer via security.Executor's callback.
-	// This enables multi-agent mode to show execution progress on the frontend.
-	if m.chunk != nil {
+	if chunk != nil {
 		toolCallID := compose.GetToolCallID(ctx)
 		if toolCallID != "" {
 			if existing, ok := ctx.Value(security.ToolOutputCallbackCtxKey).(security.ToolOutputCallback); ok && existing != nil {
-				// Chain existing callback (if any) + our progress forwarder.
 				ctx = context.WithValue(ctx, security.ToolOutputCallbackCtxKey, security.ToolOutputCallback(func(c string) {
 					existing(c)
 					if strings.TrimSpace(c) == "" {
 						return
 					}
-					m.chunk(m.name, toolCallID, c)
+					chunk(toolName, toolCallID, c)
 				}))
 			} else {
 				ctx = context.WithValue(ctx, security.ToolOutputCallbackCtxKey, security.ToolOutputCallback(func(c string) {
 					if strings.TrimSpace(c) == "" {
 						return
 					}
-					m.chunk(m.name, toolCallID, c)
+					chunk(toolName, toolCallID, c)
 				}))
 			}
 		}
 	}
 
-	conv := m.holder.Get()
-	res, err := m.agent.ExecuteMCPToolForConversation(ctx, conv, m.name, args)
+	res, err := ag.ExecuteMCPToolForConversation(ctx, holder.Get(), toolName, args)
 	if err != nil {
 		return "", err
 	}
 	if res == nil {
 		return "", nil
 	}
-	if res.ExecutionID != "" && m.record != nil {
-		m.record(res.ExecutionID)
+	if res.ExecutionID != "" && record != nil {
+		record(res.ExecutionID)
 	}
 	if res.IsError {
 		return ToolErrorPrefix + res.Result, nil
 	}
 	return res.Result, nil
+}
+
+// UnknownToolReminderHandler 供 compose.ToolsNodeConfig.UnknownToolsHandler 使用：
+// 模型请求了未注册的工具名时，仅返回说明性文本，error 恒为 nil，以便 ReAct 继续迭代而不中断图执行。
+// 不进行名称猜测或映射，避免误执行。
+func UnknownToolReminderHandler() func(ctx context.Context, name, input string) (string, error) {
+	return func(ctx context.Context, name, input string) (string, error) {
+		_ = ctx
+		_ = input
+		return unknownToolReminderText(strings.TrimSpace(name)), nil
+	}
+}
+
+func unknownToolReminderText(requested string) string {
+	if requested == "" {
+		requested = "(empty)"
+	}
+	return fmt.Sprintf(`The tool name %q is not registered for this agent.
+
+Please retry using only names that appear in the tool definitions for this turn (exact match, case-sensitive). Do not invent or rename tools; adjust your plan and continue.
+
+（工具 %q 未注册：请仅使用本回合上下文中给出的工具名称，须完全一致；请勿自行改写或猜测名称，并继续后续步骤。）`, requested, requested)
 }

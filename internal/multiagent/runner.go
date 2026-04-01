@@ -101,8 +101,8 @@ func RunDeepAgent(
 			return
 		}
 		progress("tool_result_delta", chunk, map[string]interface{}{
-			"toolName":    toolName,
-			"toolCallId":  toolCallID,
+			"toolName":   toolName,
+			"toolCallId": toolCallID,
 			// index/total/iteration are optional for UI; we don't know them in this bridge.
 			"index":     0,
 			"total":     0,
@@ -221,7 +221,8 @@ func RunDeepAgent(
 			Model:       subModel,
 			ToolsConfig: adk.ToolsConfig{
 				ToolsNodeConfig: compose.ToolsNodeConfig{
-					Tools: subTools,
+					Tools:               subTools,
+					UnknownToolsHandler: einomcp.UnknownToolReminderHandler(),
 				},
 				EmitInternalEvents: true,
 			},
@@ -275,7 +276,8 @@ func RunDeepAgent(
 		},
 		ToolsConfig: adk.ToolsConfig{
 			ToolsNodeConfig: compose.ToolsNodeConfig{
-				Tools: mainTools,
+				Tools:               mainTools,
+				UnknownToolsHandler: einomcp.UnknownToolReminderHandler(),
 			},
 			EmitInternalEvents: true,
 		},
@@ -284,14 +286,8 @@ func RunDeepAgent(
 		return nil, fmt.Errorf("deep.New: %w", err)
 	}
 
-	msgs := historyToMessages(history)
-	msgs = append(msgs, schema.UserMessage(userMessage))
-
-	runner := adk.NewRunner(ctx, adk.RunnerConfig{
-		Agent:           da,
-		EnableStreaming: true,
-	})
-	iter := runner.Run(ctx, msgs)
+	baseMsgs := historyToMessages(history)
+	baseMsgs = append(baseMsgs, schema.UserMessage(userMessage))
 
 	streamsMainAssistant := func(agent string) bool {
 		return agent == "" || agent == orchestratorName
@@ -303,255 +299,301 @@ func RunDeepAgent(
 		return "sub"
 	}
 
-	// 仅保留主代理最后一次 assistant 输出，避免把多轮中间回复拼接到最终答案。
+	var lastRunMsgs []adk.Message
 	var lastAssistant string
-	var reasoningStreamSeq int64
-	var einoSubReplyStreamSeq int64
-	toolEmitSeen := make(map[string]struct{})
-	// 主代理「外层轮次」：首次进入编排器为第 1 轮，每从子代理回到编排器 +1。
-	// 子代理「步数」：该子代理每次发起一批工具调用前 +1（近似 ReAct 步）。
-	var einoMainRound int
-	var einoLastAgent string
-	subAgentToolStep := make(map[string]int)
-	for {
-		ev, ok := iter.Next()
-		if !ok {
-			break
+
+attemptLoop:
+	for attempt := 0; attempt < maxToolCallArgumentsJSONAttempts; attempt++ {
+		msgs := make([]adk.Message, 0, len(baseMsgs)+attempt)
+		msgs = append(msgs, baseMsgs...)
+		for i := 0; i < attempt; i++ {
+			msgs = append(msgs, toolCallArgumentsJSONRetryHint())
 		}
-		if ev == nil {
-			continue
-		}
-		if ev.Err != nil {
+
+		if attempt > 0 {
+			mcpIDsMu.Lock()
+			mcpIDs = mcpIDs[:0]
+			mcpIDsMu.Unlock()
+			if logger != nil {
+				logger.Warn("eino DeepAgent: 工具参数 JSON 被接口拒绝，追加提示后重试",
+					zap.Int("attempt", attempt),
+					zap.Int("maxAttempts", maxToolCallArgumentsJSONAttempts))
+			}
 			if progress != nil {
-				progress("error", ev.Err.Error(), map[string]interface{}{
+				// 使用专用事件类型 eino_recovery，便于前端时间线展示（progress 仅改标题，不进时间线）
+				progress("eino_recovery", toolCallArgumentsJSONRecoveryTimelineMessage(attempt), map[string]interface{}{
 					"conversationId": conversationID,
-					"source":         "eino",
+					"source":           "eino",
+					"einoRetry":        attempt,
+					"runIndex":         attempt + 1, // 第几轮完整运行（1 为首次，重试后递增）
+					"maxRuns":          maxToolCallArgumentsJSONAttempts,
+					"reason":           "invalid_tool_arguments_json",
 				})
 			}
-			return nil, ev.Err
 		}
-		if ev.AgentName != "" && progress != nil {
-			if streamsMainAssistant(ev.AgentName) {
-				if einoMainRound == 0 {
-					einoMainRound = 1
-					progress("iteration", "", map[string]interface{}{
-						"iteration":      1,
-						"einoScope":      "main",
-						"einoRole":       "orchestrator",
-						"einoAgent":      orchestratorName,
-						"conversationId": conversationID,
-						"source":         "eino",
-					})
-				} else if einoLastAgent != "" && !streamsMainAssistant(einoLastAgent) {
-					einoMainRound++
-					progress("iteration", "", map[string]interface{}{
-						"iteration":      einoMainRound,
-						"einoScope":      "main",
-						"einoRole":       "orchestrator",
-						"einoAgent":      orchestratorName,
-						"conversationId": conversationID,
-						"source":         "eino",
-					})
-				}
-			}
-			einoLastAgent = ev.AgentName
-			progress("progress", fmt.Sprintf("[Eino] %s", ev.AgentName), map[string]interface{}{
-				"conversationId": conversationID,
-				"einoAgent":      ev.AgentName,
-				"einoRole":       einoRoleTag(ev.AgentName),
-			})
-		}
-		if ev.Output == nil || ev.Output.MessageOutput == nil {
-			continue
-		}
-		mv := ev.Output.MessageOutput
 
-		if mv.IsStreaming && mv.MessageStream != nil {
-			streamHeaderSent := false
-			var reasoningStreamID string
-			var toolStreamFragments []schema.ToolCall
-			var subAssistantBuf strings.Builder
-			var subReplyStreamID string
-			var mainAssistantBuf strings.Builder
-			for {
-				chunk, rerr := mv.MessageStream.Recv()
-				if rerr != nil {
-					if errors.Is(rerr, io.EOF) {
-						break
-					}
+		// 仅保留主代理最后一次 assistant 输出；每轮重试重置，避免拼接失败轮次的片段。
+		lastAssistant = ""
+		var reasoningStreamSeq int64
+		var einoSubReplyStreamSeq int64
+		toolEmitSeen := make(map[string]struct{})
+		var einoMainRound int
+		var einoLastAgent string
+		subAgentToolStep := make(map[string]int)
+
+		runner := adk.NewRunner(ctx, adk.RunnerConfig{
+			Agent:           da,
+			EnableStreaming: true,
+		})
+		iter := runner.Run(ctx, msgs)
+
+		for {
+			ev, ok := iter.Next()
+			if !ok {
+				lastRunMsgs = msgs
+				break attemptLoop
+			}
+			if ev == nil {
+				continue
+			}
+			if ev.Err != nil {
+				if isRecoverableToolCallArgumentsJSONError(ev.Err) && attempt+1 < maxToolCallArgumentsJSONAttempts {
 					if logger != nil {
-						logger.Warn("eino stream recv", zap.Error(rerr))
+						logger.Warn("eino: recoverable tool-call JSON error from model/API", zap.Error(ev.Err), zap.Int("attempt", attempt))
 					}
-					break
+					continue attemptLoop
 				}
-				if chunk == nil {
-					continue
-				}
-				if progress != nil && strings.TrimSpace(chunk.ReasoningContent) != "" {
-					if reasoningStreamID == "" {
-						reasoningStreamID = fmt.Sprintf("eino-reasoning-%s-%d", conversationID, atomic.AddInt64(&reasoningStreamSeq, 1))
-						progress("thinking_stream_start", " ", map[string]interface{}{
-							"streamId":   reasoningStreamID,
-							"source":     "eino",
-							"einoAgent":  ev.AgentName,
-							"einoRole":   einoRoleTag(ev.AgentName),
-						})
-					}
-					progress("thinking_stream_delta", chunk.ReasoningContent, map[string]interface{}{
-						"streamId": reasoningStreamID,
+				if progress != nil {
+					progress("error", ev.Err.Error(), map[string]interface{}{
+						"conversationId": conversationID,
+						"source":         "eino",
 					})
 				}
-				if chunk.Content != "" {
-					if progress != nil && streamsMainAssistant(ev.AgentName) {
-						if !streamHeaderSent {
-							progress("response_start", "", map[string]interface{}{
-								"conversationId":     conversationID,
-								"mcpExecutionIds":      snapshotMCPIDs(),
-								"messageGeneratedBy":   "eino:" + ev.AgentName,
-								"einoRole":             "orchestrator",
-							})
-							streamHeaderSent = true
-						}
-						progress("response_delta", chunk.Content, map[string]interface{}{
-							"conversationId":  conversationID,
-							"mcpExecutionIds": snapshotMCPIDs(),
-							"einoRole":        "orchestrator",
-						})
-						mainAssistantBuf.WriteString(chunk.Content)
-					} else if !streamsMainAssistant(ev.AgentName) {
-						if progress != nil {
-							if subReplyStreamID == "" {
-								subReplyStreamID = fmt.Sprintf("eino-sub-reply-%s-%d", conversationID, atomic.AddInt64(&einoSubReplyStreamSeq, 1))
-								progress("eino_agent_reply_stream_start", "", map[string]interface{}{
-									"streamId":         subReplyStreamID,
-									"einoAgent":        ev.AgentName,
-									"einoRole":         "sub",
-									"conversationId":   conversationID,
-									"source":           "eino",
-								})
-							}
-							progress("eino_agent_reply_stream_delta", chunk.Content, map[string]interface{}{
-								"streamId":       subReplyStreamID,
-								"conversationId": conversationID,
-							})
-						}
-						subAssistantBuf.WriteString(chunk.Content)
-					}
-				}
-				// 收集流式 tool_calls 全部分片；arguments 在最后一帧常为 ""，需按 index/id 合并后才能展示 subagent_type/description。
-				if len(chunk.ToolCalls) > 0 {
-					toolStreamFragments = append(toolStreamFragments, chunk.ToolCalls...)
-				}
+				return nil, ev.Err
 			}
-			if streamsMainAssistant(ev.AgentName) {
-				if s := strings.TrimSpace(mainAssistantBuf.String()); s != "" {
-					lastAssistant = s
-				}
-			}
-			if subAssistantBuf.Len() > 0 && progress != nil {
-				if s := strings.TrimSpace(subAssistantBuf.String()); s != "" {
-					if subReplyStreamID != "" {
-						progress("eino_agent_reply_stream_end", s, map[string]interface{}{
-							"streamId":         subReplyStreamID,
-							"einoAgent":        ev.AgentName,
-							"einoRole":         "sub",
-							"conversationId":   conversationID,
-							"source":           "eino",
-						})
-					} else {
-						progress("eino_agent_reply", s, map[string]interface{}{
+			if ev.AgentName != "" && progress != nil {
+				if streamsMainAssistant(ev.AgentName) {
+					if einoMainRound == 0 {
+						einoMainRound = 1
+						progress("iteration", "", map[string]interface{}{
+							"iteration":      1,
+							"einoScope":      "main",
+							"einoRole":       "orchestrator",
+							"einoAgent":      orchestratorName,
 							"conversationId": conversationID,
-							"einoAgent":        ev.AgentName,
-							"einoRole":         "sub",
-							"source":           "eino",
+							"source":         "eino",
+						})
+					} else if einoLastAgent != "" && !streamsMainAssistant(einoLastAgent) {
+						einoMainRound++
+						progress("iteration", "", map[string]interface{}{
+							"iteration":      einoMainRound,
+							"einoScope":      "main",
+							"einoRole":       "orchestrator",
+							"einoAgent":      orchestratorName,
+							"conversationId": conversationID,
+							"source":         "eino",
 						})
 					}
 				}
-			}
-			var lastToolChunk *schema.Message
-			if merged := mergeStreamingToolCallFragments(toolStreamFragments); len(merged) > 0 {
-				lastToolChunk = &schema.Message{ToolCalls: merged}
-			}
-			tryEmitToolCallsOnce(lastToolChunk, ev.AgentName, orchestratorName, conversationID, progress, toolEmitSeen, subAgentToolStep)
-			continue
-		}
-
-		msg, gerr := mv.GetMessage()
-		if gerr != nil || msg == nil {
-			continue
-		}
-		tryEmitToolCallsOnce(mergeMessageToolCalls(msg), ev.AgentName, orchestratorName, conversationID, progress, toolEmitSeen, subAgentToolStep)
-
-		if mv.Role == schema.Assistant {
-			if progress != nil && strings.TrimSpace(msg.ReasoningContent) != "" {
-				progress("thinking", strings.TrimSpace(msg.ReasoningContent), map[string]interface{}{
+				einoLastAgent = ev.AgentName
+				progress("progress", fmt.Sprintf("[Eino] %s", ev.AgentName), map[string]interface{}{
 					"conversationId": conversationID,
-					"source":         "eino",
 					"einoAgent":      ev.AgentName,
 					"einoRole":       einoRoleTag(ev.AgentName),
 				})
 			}
-			body := strings.TrimSpace(msg.Content)
-			if body != "" {
-				if streamsMainAssistant(ev.AgentName) {
-					if progress != nil {
-						progress("response_start", "", map[string]interface{}{
-							"conversationId":     conversationID,
-							"mcpExecutionIds":    snapshotMCPIDs(),
-							"messageGeneratedBy": "eino:" + ev.AgentName,
-							"einoRole":           "orchestrator",
-						})
-						progress("response_delta", body, map[string]interface{}{
-							"conversationId":  conversationID,
-							"mcpExecutionIds": snapshotMCPIDs(),
-							"einoRole":        "orchestrator",
+			if ev.Output == nil || ev.Output.MessageOutput == nil {
+				continue
+			}
+			mv := ev.Output.MessageOutput
+
+			if mv.IsStreaming && mv.MessageStream != nil {
+				streamHeaderSent := false
+				var reasoningStreamID string
+				var toolStreamFragments []schema.ToolCall
+				var subAssistantBuf strings.Builder
+				var subReplyStreamID string
+				var mainAssistantBuf strings.Builder
+				for {
+					chunk, rerr := mv.MessageStream.Recv()
+					if rerr != nil {
+						if errors.Is(rerr, io.EOF) {
+							break
+						}
+						if logger != nil {
+							logger.Warn("eino stream recv", zap.Error(rerr))
+						}
+						break
+					}
+					if chunk == nil {
+						continue
+					}
+					if progress != nil && strings.TrimSpace(chunk.ReasoningContent) != "" {
+						if reasoningStreamID == "" {
+							reasoningStreamID = fmt.Sprintf("eino-reasoning-%s-%d", conversationID, atomic.AddInt64(&reasoningStreamSeq, 1))
+							progress("thinking_stream_start", " ", map[string]interface{}{
+								"streamId":  reasoningStreamID,
+								"source":    "eino",
+								"einoAgent": ev.AgentName,
+								"einoRole":  einoRoleTag(ev.AgentName),
+							})
+						}
+						progress("thinking_stream_delta", chunk.ReasoningContent, map[string]interface{}{
+							"streamId": reasoningStreamID,
 						})
 					}
-					lastAssistant = body
-				} else if progress != nil {
-					progress("eino_agent_reply", body, map[string]interface{}{
+					if chunk.Content != "" {
+						if progress != nil && streamsMainAssistant(ev.AgentName) {
+							if !streamHeaderSent {
+								progress("response_start", "", map[string]interface{}{
+									"conversationId":     conversationID,
+									"mcpExecutionIds":    snapshotMCPIDs(),
+									"messageGeneratedBy": "eino:" + ev.AgentName,
+									"einoRole":           "orchestrator",
+								})
+								streamHeaderSent = true
+							}
+							progress("response_delta", chunk.Content, map[string]interface{}{
+								"conversationId":  conversationID,
+								"mcpExecutionIds": snapshotMCPIDs(),
+								"einoRole":        "orchestrator",
+							})
+							mainAssistantBuf.WriteString(chunk.Content)
+						} else if !streamsMainAssistant(ev.AgentName) {
+							if progress != nil {
+								if subReplyStreamID == "" {
+									subReplyStreamID = fmt.Sprintf("eino-sub-reply-%s-%d", conversationID, atomic.AddInt64(&einoSubReplyStreamSeq, 1))
+									progress("eino_agent_reply_stream_start", "", map[string]interface{}{
+										"streamId":       subReplyStreamID,
+										"einoAgent":      ev.AgentName,
+										"einoRole":       "sub",
+										"conversationId": conversationID,
+										"source":         "eino",
+									})
+								}
+								progress("eino_agent_reply_stream_delta", chunk.Content, map[string]interface{}{
+									"streamId":       subReplyStreamID,
+									"conversationId": conversationID,
+								})
+							}
+							subAssistantBuf.WriteString(chunk.Content)
+						}
+					}
+					// 收集流式 tool_calls 全部分片；arguments 在最后一帧常为 ""，需按 index/id 合并后才能展示 subagent_type/description。
+					if len(chunk.ToolCalls) > 0 {
+						toolStreamFragments = append(toolStreamFragments, chunk.ToolCalls...)
+					}
+				}
+				if streamsMainAssistant(ev.AgentName) {
+					if s := strings.TrimSpace(mainAssistantBuf.String()); s != "" {
+						lastAssistant = s
+					}
+				}
+				if subAssistantBuf.Len() > 0 && progress != nil {
+					if s := strings.TrimSpace(subAssistantBuf.String()); s != "" {
+						if subReplyStreamID != "" {
+							progress("eino_agent_reply_stream_end", s, map[string]interface{}{
+								"streamId":       subReplyStreamID,
+								"einoAgent":      ev.AgentName,
+								"einoRole":       "sub",
+								"conversationId": conversationID,
+								"source":         "eino",
+							})
+						} else {
+							progress("eino_agent_reply", s, map[string]interface{}{
+								"conversationId": conversationID,
+								"einoAgent":      ev.AgentName,
+								"einoRole":       "sub",
+								"source":         "eino",
+							})
+						}
+					}
+				}
+				var lastToolChunk *schema.Message
+				if merged := mergeStreamingToolCallFragments(toolStreamFragments); len(merged) > 0 {
+					lastToolChunk = &schema.Message{ToolCalls: merged}
+				}
+				tryEmitToolCallsOnce(lastToolChunk, ev.AgentName, orchestratorName, conversationID, progress, toolEmitSeen, subAgentToolStep)
+				continue
+			}
+
+			msg, gerr := mv.GetMessage()
+			if gerr != nil || msg == nil {
+				continue
+			}
+			tryEmitToolCallsOnce(mergeMessageToolCalls(msg), ev.AgentName, orchestratorName, conversationID, progress, toolEmitSeen, subAgentToolStep)
+
+			if mv.Role == schema.Assistant {
+				if progress != nil && strings.TrimSpace(msg.ReasoningContent) != "" {
+					progress("thinking", strings.TrimSpace(msg.ReasoningContent), map[string]interface{}{
 						"conversationId": conversationID,
-						"einoAgent":      ev.AgentName,
-						"einoRole":       "sub",
 						"source":         "eino",
+						"einoAgent":      ev.AgentName,
+						"einoRole":       einoRoleTag(ev.AgentName),
 					})
 				}
+				body := strings.TrimSpace(msg.Content)
+				if body != "" {
+					if streamsMainAssistant(ev.AgentName) {
+						if progress != nil {
+							progress("response_start", "", map[string]interface{}{
+								"conversationId":     conversationID,
+								"mcpExecutionIds":    snapshotMCPIDs(),
+								"messageGeneratedBy": "eino:" + ev.AgentName,
+								"einoRole":           "orchestrator",
+							})
+							progress("response_delta", body, map[string]interface{}{
+								"conversationId":  conversationID,
+								"mcpExecutionIds": snapshotMCPIDs(),
+								"einoRole":        "orchestrator",
+							})
+						}
+						lastAssistant = body
+					} else if progress != nil {
+						progress("eino_agent_reply", body, map[string]interface{}{
+							"conversationId": conversationID,
+							"einoAgent":      ev.AgentName,
+							"einoRole":       "sub",
+							"source":         "eino",
+						})
+					}
+				}
 			}
-		}
 
-		if mv.Role == schema.Tool && progress != nil {
-			toolName := msg.ToolName
-			if toolName == "" {
-				toolName = mv.ToolName
-			}
+			if mv.Role == schema.Tool && progress != nil {
+				toolName := msg.ToolName
+				if toolName == "" {
+					toolName = mv.ToolName
+				}
 
-			// bridge 工具在 res.IsError=true 时会返回带前缀的内容；这里解析为 success/isError，避免前端误判为成功。
-			content := msg.Content
-			isErr := false
-			if strings.HasPrefix(content, einomcp.ToolErrorPrefix) {
-				isErr = true
-				content = strings.TrimPrefix(content, einomcp.ToolErrorPrefix)
-			}
+				// bridge 工具在 res.IsError=true 时会返回带前缀的内容；这里解析为 success/isError，避免前端误判为成功。
+				content := msg.Content
+				isErr := false
+				if strings.HasPrefix(content, einomcp.ToolErrorPrefix) {
+					isErr = true
+					content = strings.TrimPrefix(content, einomcp.ToolErrorPrefix)
+				}
 
-			preview := content
-			if len(preview) > 200 {
-				preview = preview[:200] + "..."
+				preview := content
+				if len(preview) > 200 {
+					preview = preview[:200] + "..."
+				}
+				data := map[string]interface{}{
+					"toolName":       toolName,
+					"success":        !isErr,
+					"isError":        isErr,
+					"result":         content,
+					"resultPreview":  preview,
+					"conversationId": conversationID,
+					"einoAgent":      ev.AgentName,
+					"einoRole":       einoRoleTag(ev.AgentName),
+					"source":         "eino",
+				}
+				if msg.ToolCallID != "" {
+					data["toolCallId"] = msg.ToolCallID
+				}
+				progress("tool_result", fmt.Sprintf("工具结果 (%s)", toolName), data)
 			}
-			data := map[string]interface{}{
-				"toolName":       toolName,
-				"success":        !isErr,
-				"isError":        isErr,
-				"result":         content,
-				"resultPreview":  preview,
-				"conversationId": conversationID,
-				"einoAgent":      ev.AgentName,
-				"einoRole":       einoRoleTag(ev.AgentName),
-				"source":         "eino",
-			}
-			if msg.ToolCallID != "" {
-				data["toolCallId"] = msg.ToolCallID
-			}
-			progress("tool_result", fmt.Sprintf("工具结果 (%s)", toolName), data)
 		}
 	}
 
@@ -559,7 +601,7 @@ func RunDeepAgent(
 	ids := append([]string(nil), mcpIDs...)
 	mcpIDsMu.Unlock()
 
-	histJSON, _ := json.Marshal(msgs)
+	histJSON, _ := json.Marshal(lastRunMsgs)
 	cleaned := strings.TrimSpace(lastAssistant)
 	cleaned = dedupeRepeatedParagraphs(cleaned, 80)
 	cleaned = dedupeParagraphsByLineFingerprint(cleaned, 100)
