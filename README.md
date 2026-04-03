@@ -17,7 +17,7 @@
 </details>
 
 <details>
-<summary><strong>Sponsorship</strong> (WeChat Pay & Alipay — click to reveal QR codes)</summary>
+<summary><strong>Sponsorship</strong> (click to expand)</summary>
 
 If CyberStrikeAI helps you, you can support the project via **WeChat Pay** or **Alipay**:
 

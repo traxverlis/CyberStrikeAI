@@ -16,7 +16,7 @@
 </details>
 
 <details>
-<summary><strong>赞助</strong>（微信支付与支付宝 — 点击展开二维码）</summary>
+<summary><strong>赞助</strong>（点击展开）</summary>
 
 若 CyberStrikeAI 对您有帮助，可通过 **微信支付** 或 **支付宝** 赞助项目：
 
