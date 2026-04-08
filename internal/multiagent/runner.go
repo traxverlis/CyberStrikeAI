@@ -302,34 +302,20 @@ func RunDeepAgent(
 	var lastRunMsgs []adk.Message
 	var lastAssistant string
 
+	// retryHints tracks the corrective hint to append for each retry attempt.
+	// Index i corresponds to the hint that will be appended on attempt i+1.
+	var retryHints []adk.Message
+
 attemptLoop:
-	for attempt := 0; attempt < maxToolCallArgumentsJSONAttempts; attempt++ {
-		msgs := make([]adk.Message, 0, len(baseMsgs)+attempt)
+	for attempt := 0; attempt < maxToolCallRecoveryAttempts; attempt++ {
+		msgs := make([]adk.Message, 0, len(baseMsgs)+len(retryHints))
 		msgs = append(msgs, baseMsgs...)
-		for i := 0; i < attempt; i++ {
-			msgs = append(msgs, toolCallArgumentsJSONRetryHint())
-		}
+		msgs = append(msgs, retryHints...)
 
 		if attempt > 0 {
 			mcpIDsMu.Lock()
 			mcpIDs = mcpIDs[:0]
 			mcpIDsMu.Unlock()
-			if logger != nil {
-				logger.Warn("eino DeepAgent: 工具参数 JSON 被接口拒绝，追加提示后重试",
-					zap.Int("attempt", attempt),
-					zap.Int("maxAttempts", maxToolCallArgumentsJSONAttempts))
-			}
-			if progress != nil {
-				// 使用专用事件类型 eino_recovery，便于前端时间线展示（progress 仅改标题，不进时间线）
-				progress("eino_recovery", toolCallArgumentsJSONRecoveryTimelineMessage(attempt), map[string]interface{}{
-					"conversationId": conversationID,
-					"source":           "eino",
-					"einoRetry":        attempt,
-					"runIndex":         attempt + 1, // 第几轮完整运行（1 为首次，重试后递增）
-					"maxRuns":          maxToolCallArgumentsJSONAttempts,
-					"reason":           "invalid_tool_arguments_json",
-				})
-			}
 		}
 
 		// 仅保留主代理最后一次 assistant 输出；每轮重试重置，避免拼接失败轮次的片段。
@@ -357,12 +343,48 @@ attemptLoop:
 				continue
 			}
 			if ev.Err != nil {
-				if isRecoverableToolCallArgumentsJSONError(ev.Err) && attempt+1 < maxToolCallArgumentsJSONAttempts {
+				canRetry := attempt+1 < maxToolCallRecoveryAttempts
+
+				// Recoverable: API-level JSON argument validation error.
+				if canRetry && isRecoverableToolCallArgumentsJSONError(ev.Err) {
 					if logger != nil {
 						logger.Warn("eino: recoverable tool-call JSON error from model/API", zap.Error(ev.Err), zap.Int("attempt", attempt))
 					}
+					retryHints = append(retryHints, toolCallArgumentsJSONRetryHint())
+					if progress != nil {
+						progress("eino_recovery", toolCallArgumentsJSONRecoveryTimelineMessage(attempt), map[string]interface{}{
+							"conversationId": conversationID,
+							"source":         "eino",
+							"einoRetry":      attempt,
+							"runIndex":       attempt + 1,
+							"maxRuns":        maxToolCallRecoveryAttempts,
+							"reason":         "invalid_tool_arguments_json",
+						})
+					}
 					continue attemptLoop
 				}
+
+				// Recoverable: tool execution error (unknown sub-agent, tool not found, bad JSON in args, etc.).
+				if canRetry && isRecoverableToolExecutionError(ev.Err) {
+					if logger != nil {
+						logger.Warn("eino: recoverable tool execution error, will retry with corrective hint",
+							zap.Error(ev.Err), zap.Int("attempt", attempt))
+					}
+					retryHints = append(retryHints, toolExecutionRetryHint())
+					if progress != nil {
+						progress("eino_recovery", toolExecutionRecoveryTimelineMessage(attempt), map[string]interface{}{
+							"conversationId": conversationID,
+							"source":         "eino",
+							"einoRetry":      attempt,
+							"runIndex":       attempt + 1,
+							"maxRuns":        maxToolCallRecoveryAttempts,
+							"reason":         "tool_execution_error",
+						})
+					}
+					continue attemptLoop
+				}
+
+				// Non-recoverable error.
 				if progress != nil {
 					progress("error", ev.Err.Error(), map[string]interface{}{
 						"conversationId": conversationID,

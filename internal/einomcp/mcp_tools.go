@@ -108,7 +108,13 @@ func runMCPToolInvocation(
 	var args map[string]interface{}
 	if argumentsInJSON != "" && argumentsInJSON != "null" {
 		if err := json.Unmarshal([]byte(argumentsInJSON), &args); err != nil {
-			return "", fmt.Errorf("invalid tool arguments JSON: %w", err)
+			// Return soft error (nil error) so the eino graph continues and the LLM can self-correct,
+			// instead of a hard error that terminates the iteration loop.
+			return ToolErrorPrefix + fmt.Sprintf(
+				"Invalid tool arguments JSON: %s\n\nPlease ensure the arguments are a valid JSON object "+
+					"(double-quoted keys, matched braces, no trailing commas) and retry.\n\n"+
+					"（工具参数 JSON 解析失败：%s。请确保 arguments 是合法的 JSON 对象并重试。）",
+				err.Error(), err.Error()), nil
 		}
 	}
 	if args == nil {

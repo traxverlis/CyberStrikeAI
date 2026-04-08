@@ -7,9 +7,10 @@ import (
 	"github.com/cloudwego/eino/schema"
 )
 
-// maxToolCallArgumentsJSONAttempts 含首次运行：首次 + 自动重试次数。
+// maxToolCallRecoveryAttempts 含首次运行：首次 + 自动重试次数。
 // 例如为 3 表示最多共 3 次完整 DeepAgent 运行（2 次失败后各追加一条纠错提示）。
-const maxToolCallArgumentsJSONAttempts = 3
+// 该常量同时用于 JSON 参数错误和工具执行错误（如子代理名称不存在）的恢复重试。
+const maxToolCallRecoveryAttempts = 3
 
 // toolCallArgumentsJSONRetryHint 追加在用户消息后，提示模型输出合法 JSON 工具参数（部分云厂商会在流式阶段校验 arguments）。
 func toolCallArgumentsJSONRetryHint() *schema.Message {
@@ -24,7 +25,7 @@ func toolCallArgumentsJSONRecoveryTimelineMessage(attempt int) string {
 		"接口拒绝了无效的工具参数 JSON。已向对话追加系统提示并要求模型重新生成合法的 function.arguments。"+
 			"当前为第 %d/%d 轮完整运行。\n\n"+
 			"The API rejected invalid JSON in tool arguments. A system hint was appended. This is full run %d of %d.",
-		attempt+1, maxToolCallArgumentsJSONAttempts, attempt+1, maxToolCallArgumentsJSONAttempts,
+		attempt+1, maxToolCallRecoveryAttempts, attempt+1, maxToolCallRecoveryAttempts,
 	)
 }
 
