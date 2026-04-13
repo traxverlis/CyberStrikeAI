@@ -3,6 +3,60 @@ function _t(key, opts) {
     return typeof window.t === 'function' ? window.t(key, opts) : key;
 }
 
+/** 插值不转 HTML 实体（避免日期里的 / 变成 &#x2F; 再被 escapeHtml 成乱码） */
+function _tPlain(key, opts) {
+    if (typeof window.t !== 'function') return key;
+    const base = opts && typeof opts === 'object' ? opts : {};
+    const interp = base.interpolation && typeof base.interpolation === 'object' ? base.interpolation : {};
+    return window.t(key, {
+        ...base,
+        interpolation: { escapeValue: false, ...interp }
+    });
+}
+
+/** Cron 队列在「本轮 completed」等状态下的展示文案（底层 status 不变，仅 UI 强调循环调度） */
+function getBatchQueueStatusPresentation(queue) {
+    const map = {
+        pending: { text: _t('tasks.statusPending'), class: 'batch-queue-status-pending' },
+        running: { text: _t('tasks.statusRunning'), class: 'batch-queue-status-running' },
+        paused: { text: _t('tasks.statusPaused'), class: 'batch-queue-status-paused' },
+        completed: { text: _t('tasks.statusCompleted'), class: 'batch-queue-status-completed' },
+        cancelled: { text: _t('tasks.statusCancelled'), class: 'batch-queue-status-cancelled' }
+    };
+    const base = map[queue.status] || { text: queue.status, class: 'batch-queue-status-unknown' };
+    const cronOn = queue.scheduleMode === 'cron' && queue.scheduleEnabled !== false;
+    const nextStr = queue.nextRunAt ? new Date(queue.nextRunAt).toLocaleString() : '';
+    const empty = { sublabel: null, progressNote: null, callout: null };
+
+    if (cronOn && queue.status === 'completed') {
+        return {
+            text: _t('tasks.statusCronCycleIdle'),
+            class: 'batch-queue-status-cron-cycle',
+            sublabel: nextStr ? _tPlain('tasks.cronNextRunLine', { time: nextStr }) : null,
+            progressNote: _t('tasks.cronRoundDoneProgressHint'),
+            callout: _t('tasks.cronRecurringCallout')
+        };
+    }
+    if (cronOn && queue.status === 'running') {
+        return {
+            text: _t('tasks.statusCronRunning'),
+            class: 'batch-queue-status-running batch-queue-cron-active',
+            sublabel: nextStr ? _tPlain('tasks.cronNextRunLine', { time: nextStr }) : null,
+            progressNote: _t('tasks.cronRunningProgressHint'),
+            callout: null
+        };
+    }
+    if (cronOn && queue.status === 'pending' && nextStr) {
+        return {
+            ...base,
+            ...empty,
+            sublabel: _tPlain('tasks.cronPendingScheduled', { time: nextStr }),
+            progressNote: _t('tasks.cronPendingProgressNote')
+        };
+    }
+    return { ...base, ...empty };
+}
+
 // HTML转义函数（如果未定义）
 if (typeof escapeHtml === 'undefined') {
     function escapeHtml(text) {
@@ -725,6 +779,9 @@ async function showBatchImportModal() {
     const input = document.getElementById('batch-tasks-input');
     const titleInput = document.getElementById('batch-queue-title');
     const roleSelect = document.getElementById('batch-queue-role');
+    const agentModeSelect = document.getElementById('batch-queue-agent-mode');
+    const scheduleModeSelect = document.getElementById('batch-queue-schedule-mode');
+    const cronExprInput = document.getElementById('batch-queue-cron-expr');
     if (modal && input) {
         input.value = '';
         if (titleInput) {
@@ -734,6 +791,16 @@ async function showBatchImportModal() {
         if (roleSelect) {
             roleSelect.value = '';
         }
+        if (agentModeSelect) {
+            agentModeSelect.value = 'single';
+        }
+        if (scheduleModeSelect) {
+            scheduleModeSelect.value = 'manual';
+        }
+        if (cronExprInput) {
+            cronExprInput.value = '';
+        }
+        handleBatchScheduleModeChange();
         updateBatchImportStats('');
         
         // 加载并填充角色列表
@@ -776,6 +843,24 @@ function closeBatchImportModal() {
     }
 }
 
+function handleBatchScheduleModeChange() {
+    const scheduleModeSelect = document.getElementById('batch-queue-schedule-mode');
+    const cronGroup = document.getElementById('batch-queue-cron-group');
+    const cronExprInput = document.getElementById('batch-queue-cron-expr');
+    const isCron = scheduleModeSelect && scheduleModeSelect.value === 'cron';
+    if (cronGroup) {
+        cronGroup.style.display = isCron ? 'block' : 'none';
+    }
+    if (cronExprInput) {
+        if (isCron) {
+            cronExprInput.setAttribute('required', 'required');
+        } else {
+            cronExprInput.removeAttribute('required');
+            cronExprInput.value = '';
+        }
+    }
+}
+
 // 更新新建任务统计
 function updateBatchImportStats(text) {
     const statsEl = document.getElementById('batch-import-stats');
@@ -807,6 +892,9 @@ async function createBatchQueue() {
     const input = document.getElementById('batch-tasks-input');
     const titleInput = document.getElementById('batch-queue-title');
     const roleSelect = document.getElementById('batch-queue-role');
+    const agentModeSelect = document.getElementById('batch-queue-agent-mode');
+    const scheduleModeSelect = document.getElementById('batch-queue-schedule-mode');
+    const cronExprInput = document.getElementById('batch-queue-cron-expr');
     if (!input) return;
     
     const text = input.value.trim();
@@ -827,6 +915,13 @@ async function createBatchQueue() {
     
     // 获取角色（可选，空字符串表示默认角色）
     const role = roleSelect ? roleSelect.value || '' : '';
+    const agentMode = agentModeSelect ? (agentModeSelect.value === 'multi' ? 'multi' : 'single') : 'single';
+    const scheduleMode = scheduleModeSelect ? (scheduleModeSelect.value === 'cron' ? 'cron' : 'manual') : 'manual';
+    const cronExpr = cronExprInput ? cronExprInput.value.trim() : '';
+    if (scheduleMode === 'cron' && !cronExpr) {
+        alert(_t('batchImportModal.cronExprRequired'));
+        return;
+    }
     
     try {
         const response = await apiFetch('/api/batch-tasks', {
@@ -834,7 +929,7 @@ async function createBatchQueue() {
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ title, tasks, role }),
+            body: JSON.stringify({ title, tasks, role, agentMode, scheduleMode, cronExpr }),
         });
         
         if (!response.ok) {
@@ -978,15 +1073,7 @@ function renderBatchQueues() {
     }
     
     list.innerHTML = queues.map(queue => {
-        const statusMap = {
-            'pending': { text: _t('tasks.statusPending'), class: 'batch-queue-status-pending' },
-            'running': { text: _t('tasks.statusRunning'), class: 'batch-queue-status-running' },
-            'paused': { text: _t('tasks.statusPaused'), class: 'batch-queue-status-paused' },
-            'completed': { text: _t('tasks.statusCompleted'), class: 'batch-queue-status-completed' },
-            'cancelled': { text: _t('tasks.statusCancelled'), class: 'batch-queue-status-cancelled' }
-        };
-        
-        const status = statusMap[queue.status] || { text: queue.status, class: 'batch-queue-status-unknown' };
+        const pres = getBatchQueueStatusPresentation(queue);
         
         // 统计任务状态
         const stats = {
@@ -1010,44 +1097,59 @@ function renderBatchQueues() {
         // 允许删除待执行、已完成或已取消状态的队列
         const canDelete = queue.status === 'pending' || queue.status === 'completed' || queue.status === 'cancelled';
         
-        const titleDisplay = queue.title ? `<span class="batch-queue-title" style="font-weight: 600; color: var(--text-primary); margin-right: 8px;">${escapeHtml(queue.title)}</span>` : '';
-        
-        // 显示角色信息（使用正确的角色图标）
         const loadedRoles = batchQueuesState.loadedRoles || [];
         const roleIcon = getRoleIconForDisplay(queue.role, loadedRoles);
         const roleName = queue.role && queue.role !== '' ? queue.role : _t('batchQueueDetailModal.defaultRole');
-        const roleDisplay = `<span class="batch-queue-role" style="margin-right: 8px;" title="${_t('batchQueueDetailModal.role')}: ${escapeHtml(roleName)}">${roleIcon} ${escapeHtml(roleName)}</span>`;
-        
+        const isCronCycleIdle = queue.scheduleMode === 'cron' && queue.scheduleEnabled !== false && queue.status === 'completed';
+        const cardMod = isCronCycleIdle ? ' batch-queue-item--cron-wait' : '';
+        const progressFillMod = isCronCycleIdle ? ' batch-queue-progress-fill--cron-wait' : '';
+
+        const agentLabel = queue.agentMode === 'multi' ? _t('batchImportModal.agentModeMulti') : _t('batchImportModal.agentModeSingle');
+        let scheduleLabel = queue.scheduleMode === 'cron' ? _t('batchImportModal.scheduleModeCron') : _t('batchImportModal.scheduleModeManual');
+        if (queue.scheduleMode === 'cron' && queue.cronExpr) {
+            scheduleLabel += ` (${queue.cronExpr})`;
+        }
+        const configLine = [roleName, agentLabel, scheduleLabel].map(s => escapeHtml(s)).join(' · ');
+        const cronPausedNote = queue.scheduleMode === 'cron' && queue.scheduleEnabled === false
+            ? ` <span class="batch-queue-inline-warn" title="${escapeHtml(_t('batchQueueDetailModal.scheduleCronAutoHint'))}">(${escapeHtml(_t('batchQueueDetailModal.cronSchedulePausedBadge'))})</span>`
+            : '';
+        const shortId = queue.id.length > 14 ? escapeHtml(queue.id.slice(0, 12)) + '\u2026' : escapeHtml(queue.id);
+        const titleBlock = queue.title
+            ? `<h4 class="batch-queue-card-title">${escapeHtml(queue.title)}</h4>`
+            : `<h4 class="batch-queue-card-title batch-queue-card-title--muted">${escapeHtml(_t('tasks.batchQueueUntitled'))}</h4>`;
+        const doneCount = stats.completed + stats.failed + stats.cancelled;
+        const statsCompact = `<span class="batch-queue-statsline__item">${escapeHtml(_t('tasks.totalLabel'))}\u00a0${stats.total}</span><span class="batch-queue-statsline__sep">\u00b7</span><span class="batch-queue-statsline__item">${escapeHtml(_t('tasks.pendingLabel'))}\u00a0${stats.pending}</span><span class="batch-queue-statsline__sep">\u00b7</span><span class="batch-queue-statsline__item">${escapeHtml(_t('tasks.runningLabel'))}\u00a0${stats.running}</span><span class="batch-queue-statsline__sep">\u00b7</span><span class="batch-queue-statsline__item batch-queue-statsline__item--ok">${escapeHtml(_t('tasks.completedLabel'))}\u00a0${stats.completed}</span><span class="batch-queue-statsline__sep">\u00b7</span><span class="batch-queue-statsline__item batch-queue-statsline__item--err">${escapeHtml(_t('tasks.failedLabel'))}\u00a0${stats.failed}</span>${stats.cancelled > 0 ? `<span class="batch-queue-statsline__sep">\u00b7</span><span class="batch-queue-statsline__item">${escapeHtml(_t('tasks.cancelledLabel'))}\u00a0${stats.cancelled}</span>` : ''}`;
+
         return `
-            <div class="batch-queue-item" data-queue-id="${queue.id}" onclick="showBatchQueueDetail('${queue.id}')">
-                <div class="batch-queue-header">
-                    <div class="batch-queue-info" style="flex: 1;">
-                        ${titleDisplay}
-                        ${roleDisplay}
-                        <span class="batch-queue-status ${status.class}">${status.text}</span>
-                        <span class="batch-queue-id">${_t('tasks.queueIdLabel')}: ${escapeHtml(queue.id)}</span>
-                        <span class="batch-queue-time">${_t('tasks.createdTimeLabel')}: ${new Date(queue.createdAt).toLocaleString()}</span>
-                    </div>
-                    <div class="batch-queue-progress">
-                        <div class="batch-queue-progress-bar">
-                            <div class="batch-queue-progress-fill" style="width: ${progress}%"></div>
+            <div class="batch-queue-item batch-queue-item--compact${cardMod}" data-queue-id="${queue.id}" onclick="showBatchQueueDetail('${queue.id}')">
+                <div class="batch-queue-item__inner">
+                    <div class="batch-queue-item__top">
+                        <div class="batch-queue-item__title-col">
+                            ${titleBlock}
+                            <p class="batch-queue-item__config">${configLine}${cronPausedNote}</p>
+                            <p class="batch-queue-item__idline"><code title="${escapeHtml(queue.id)}">${shortId}</code><span class="batch-queue-item__idsep">\u00b7</span><span>${escapeHtml(_t('tasks.createdTimeLabel'))}\u00a0${escapeHtml(new Date(queue.createdAt).toLocaleString())}</span></p>
                         </div>
-                        <span class="batch-queue-progress-text">${progress}% (${stats.completed + stats.failed + stats.cancelled}/${stats.total})</span>
+                        <div class="batch-queue-item__top-actions" onclick="event.stopPropagation();">
+                            ${canDelete ? `<button type="button" class="batch-queue-icon-btn" onclick="deleteBatchQueueFromList('${queue.id}')" title="${escapeHtml(_t('tasks.deleteQueue'))}" aria-label="${escapeHtml(_t('tasks.deleteQueue'))}"><svg class="batch-queue-icon-btn__svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M10 11v6"/><path d="M14 11v6"/></svg></button>` : ''}
+                        </div>
                     </div>
-                    <div class="batch-queue-actions" style="display: flex; align-items: center; gap: 8px; margin-left: 12px;" onclick="event.stopPropagation();">
-                        ${canDelete ? `<button class="btn-secondary btn-small btn-danger" onclick="deleteBatchQueueFromList('${queue.id}')" title="${_t('tasks.deleteQueue')}">${_t('common.delete')}</button>` : ''}
+                    <div class="batch-queue-item__mid">
+                        <div class="batch-queue-item__mid-left">
+                            <span class="batch-queue-status ${pres.class}">${escapeHtml(pres.text)}</span>
+                            ${pres.sublabel ? `<span class="batch-queue-item__sublabel">${escapeHtml(pres.sublabel)}</span>` : ''}
+                        </div>
+                        <div class="batch-queue-item__mid-right">
+                            <div class="batch-queue-progress-bar batch-queue-progress-bar--card batch-queue-progress-bar--list">
+                                <div class="batch-queue-progress-fill${progressFillMod}" style="width: ${progress}%"></div>
+                            </div>
+                            <span class="batch-queue-item__pct">${progress}%\u00a0<span class="batch-queue-item__pct-frac">(${doneCount}/${stats.total})</span></span>
+                        </div>
                     </div>
-                </div>
-                <div class="batch-queue-stats">
-                    <span>${_t('tasks.totalLabel')}: ${stats.total}</span>
-                    <span>${_t('tasks.pendingLabel')}: ${stats.pending}</span>
-                    <span>${_t('tasks.runningLabel')}: ${stats.running}</span>
-                    <span style="color: var(--success-color);">${_t('tasks.completedLabel')}: ${stats.completed}</span>
-                    <span style="color: var(--error-color);">${_t('tasks.failedLabel')}: ${stats.failed}</span>
-                    ${stats.cancelled > 0 ? `<span style="color: var(--text-secondary);">${_t('tasks.cancelledLabel')}: ${stats.cancelled}</span>` : ''}
+                    <div class="batch-queue-statsline" aria-label="${escapeHtml(_t('tasks.batchQueueTitle'))}">${statsCompact}</div>
                 </div>
             </div>
         `;
+
     }).join('');
     
     // 渲染分页控件
@@ -1198,7 +1300,8 @@ async function showBatchQueueDetail(queueId) {
         const result = await response.json();
         const queue = result.queue;
         batchQueuesState.currentQueueId = queueId;
-        
+        const pres = getBatchQueueStatusPresentation(queue);
+
         if (title) {
             // textContent 本身会做转义；这里不要再 escapeHtml，否则会把 && 显示成 &amp;...（看起来像“变形/乱码”）
             title.textContent = queue.title ? _t('tasks.batchQueueTitle') + ' - ' + String(queue.title) : _t('tasks.batchQueueTitle');
@@ -1227,15 +1330,6 @@ async function showBatchQueueDetail(queueId) {
             deleteBtn.style.display = (queue.status === 'pending' || queue.status === 'completed' || queue.status === 'cancelled' || queue.status === 'paused') ? 'inline-block' : 'none';
         }
         
-        // 队列状态映射
-        const queueStatusMap = {
-            'pending': { text: _t('tasks.statusPending'), class: 'batch-queue-status-pending' },
-            'running': { text: _t('tasks.statusRunning'), class: 'batch-queue-status-running' },
-            'paused': { text: _t('tasks.statusPaused'), class: 'batch-queue-status-paused' },
-            'completed': { text: _t('tasks.statusCompleted'), class: 'batch-queue-status-completed' },
-            'cancelled': { text: _t('tasks.statusCancelled'), class: 'batch-queue-status-cancelled' }
-        };
-        
         // 任务状态映射
         const taskStatusMap = {
             'pending': { text: _t('tasks.statusPending'), class: 'batch-task-status-pending' },
@@ -1245,13 +1339,10 @@ async function showBatchQueueDetail(queueId) {
             'cancelled': { text: _t('tasks.statusCancelled'), class: 'batch-task-status-cancelled' }
         };
         
-        // 获取角色信息（如果队列有角色配置）
-        let roleDisplay = '';
+        let roleLineVal = '';
         if (queue.role && queue.role !== '') {
-            // 如果有角色配置，尝试获取角色详细信息
             let roleName = queue.role;
-            let roleIcon = '👤';
-            // 从已加载的角色列表中查找角色图标
+            let roleIcon = '\uD83D\uDC64';
             if (Array.isArray(loadedRoles) && loadedRoles.length > 0) {
                 const role = loadedRoles.find(r => r.name === roleName);
                 if (role && role.icon) {
@@ -1262,23 +1353,21 @@ async function showBatchQueueDetail(queueId) {
                             const codePoint = parseInt(unicodeMatch[1], 16);
                             icon = String.fromCodePoint(codePoint);
                         } catch (e) {
-                            // 转换失败，使用默认图标
+                            // ignore
                         }
                     }
                     roleIcon = icon;
                 }
             }
-            roleDisplay = `<div class="detail-item">
-                <span class="detail-label">` + _t('batchQueueDetailModal.role') + `</span>
-                <span class="detail-value">${roleIcon} ${escapeHtml(roleName)}</span>
-            </div>`;
+            roleLineVal = roleIcon + ' ' + escapeHtml(roleName);
         } else {
-            // 默认角色
-            roleDisplay = `<div class="detail-item">
-                <span class="detail-label">` + _t('batchQueueDetailModal.role') + `</span>
-                <span class="detail-value">🔵 ` + _t('batchQueueDetailModal.defaultRole') + `</span>
-            </div>`;
+            roleLineVal = '\uD83D\uDD35 ' + escapeHtml(_t('batchQueueDetailModal.defaultRole'));
         }
+        const agentModeText = queue.agentMode === 'multi' ? _t('batchImportModal.agentModeMulti') : _t('batchImportModal.agentModeSingle');
+        const scheduleModeText = queue.scheduleMode === 'cron' ? _t('batchImportModal.scheduleModeCron') : _t('batchImportModal.scheduleModeManual');
+        const scheduleDetail = escapeHtml(scheduleModeText) + (queue.scheduleMode === 'cron' && queue.cronExpr ? `（${escapeHtml(queue.cronExpr)}）` : '');
+        const showProgressNoteInModal = !!(pres.progressNote && !pres.callout);
+
         
         // 保存滚动位置，防止刷新时滚动条弹回顶部
         const modalBody = content.closest('.modal-body');
@@ -1287,36 +1376,34 @@ async function showBatchQueueDetail(queueId) {
         const savedTasksListScrollTop = tasksList ? tasksList.scrollTop : 0;
 
         content.innerHTML = `
-            <div class="batch-queue-detail-info">
-                ${queue.title ? `<div class="detail-item">
-                    <span class="detail-label">` + _t('batchQueueDetailModal.queueTitle') + `</span>
-                    <span class="detail-value">${escapeHtml(queue.title)}</span>
-                </div>` : ''}
-                ${roleDisplay}
-                <div class="detail-item">
-                    <span class="detail-label">` + _t('batchQueueDetailModal.queueId') + `</span>
-                    <span class="detail-value"><code>${escapeHtml(queue.id)}</code></span>
+            <div class="batch-queue-detail-layout">
+            <section class="batch-queue-detail-hero">
+                <span class="batch-queue-status ${pres.class}">${escapeHtml(pres.text)}</span>
+                ${pres.sublabel ? `<p class="batch-queue-detail-hero__sub">${escapeHtml(pres.sublabel)}</p>` : ''}
+                ${showProgressNoteInModal ? `<p class="batch-queue-detail-hero__note">${escapeHtml(pres.progressNote)}</p>` : ''}
+            </section>
+            <section class="batch-queue-detail-kv">
+                ${queue.title ? `<div class="bq-kv"><span class="bq-kv__k">${escapeHtml(_t('batchQueueDetailModal.queueTitle'))}</span><span class="bq-kv__v">${escapeHtml(queue.title)}</span></div>` : ''}
+                <div class="bq-kv"><span class="bq-kv__k">${escapeHtml(_t('batchQueueDetailModal.role'))}</span><span class="bq-kv__v">${roleLineVal}</span></div>
+                <div class="bq-kv"><span class="bq-kv__k">${escapeHtml(_t('batchImportModal.agentMode'))}</span><span class="bq-kv__v">${escapeHtml(agentModeText)}</span></div>
+                <div class="bq-kv"><span class="bq-kv__k">${escapeHtml(_t('batchImportModal.scheduleMode'))}</span><span class="bq-kv__v">${scheduleDetail}</span></div>
+                <div class="bq-kv"><span class="bq-kv__k">${escapeHtml(_t('batchQueueDetailModal.taskTotal'))}</span><span class="bq-kv__v">${queue.tasks.length}</span></div>
+                ${queue.scheduleMode === 'cron' ? `<div class="bq-kv bq-kv--block"><span class="bq-kv__k">${escapeHtml(_t('batchQueueDetailModal.scheduleCronAuto'))}</span><span class="bq-kv__v bq-kv__v--control"><label class="bq-cron-toggle"><input type="checkbox" ${queue.scheduleEnabled !== false ? 'checked' : ''} onchange="updateBatchQueueScheduleEnabled(this.checked)" /><span class="bq-cron-toggle__hint">${escapeHtml(_t('batchQueueDetailModal.scheduleCronAutoHint'))}</span></label></span></div>` : ''}
+            </section>
+            ${queue.lastScheduleError ? `<div class="bq-alert bq-alert--err"><strong>${escapeHtml(_t('batchQueueDetailModal.lastScheduleError'))}</strong><p>${escapeHtml(queue.lastScheduleError)}</p></div>` : ''}
+            ${queue.lastRunError ? `<div class="bq-alert bq-alert--err"><strong>${escapeHtml(_t('batchQueueDetailModal.lastRunError'))}</strong><p>${escapeHtml(queue.lastRunError)}</p></div>` : ''}
+            ${pres.callout ? `<div class="batch-queue-cron-callout batch-queue-cron-callout--compact"><span class="batch-queue-cron-callout-icon" aria-hidden="true">\u21BB</span><p>${escapeHtml(pres.callout)}</p></div>` : ''}
+            <details class="batch-queue-detail-tech">
+                <summary class="batch-queue-detail-tech__sum">${escapeHtml(_t('batchQueueDetailModal.technicalDetails'))}</summary>
+                <div class="batch-queue-detail-tech__body">
+                    <div class="bq-kv"><span class="bq-kv__k">${escapeHtml(_t('batchQueueDetailModal.queueId'))}</span><span class="bq-kv__v"><code>${escapeHtml(queue.id)}</code></span></div>
+                    <div class="bq-kv"><span class="bq-kv__k">${escapeHtml(_t('batchQueueDetailModal.createdAt'))}</span><span class="bq-kv__v">${escapeHtml(new Date(queue.createdAt).toLocaleString())}</span></div>
+                    ${queue.startedAt ? `<div class="bq-kv"><span class="bq-kv__k">${escapeHtml(_t('batchQueueDetailModal.startedAt'))}</span><span class="bq-kv__v">${escapeHtml(new Date(queue.startedAt).toLocaleString())}</span></div>` : ''}
+                    ${queue.completedAt ? `<div class="bq-kv"><span class="bq-kv__k">${escapeHtml(_t('batchQueueDetailModal.completedAt'))}</span><span class="bq-kv__v">${escapeHtml(new Date(queue.completedAt).toLocaleString())}</span></div>` : ''}
+                    ${queue.scheduleMode === 'cron' && queue.nextRunAt && !pres.sublabel ? `<div class="bq-kv"><span class="bq-kv__k">${escapeHtml(_t('batchQueueDetailModal.nextRunAt'))}</span><span class="bq-kv__v">${escapeHtml(new Date(queue.nextRunAt).toLocaleString())}</span></div>` : ''}
+                    ${queue.lastScheduleTriggerAt ? `<div class="bq-kv"><span class="bq-kv__k">${escapeHtml(_t('batchQueueDetailModal.lastScheduleTriggerAt'))}</span><span class="bq-kv__v">${escapeHtml(new Date(queue.lastScheduleTriggerAt).toLocaleString())}</span></div>` : ''}
                 </div>
-                <div class="detail-item">
-                    <span class="detail-label">` + _t('batchQueueDetailModal.status') + `</span>
-                    <span class="detail-value"><span class="batch-queue-status ${queueStatusMap[queue.status]?.class || ''}">${queueStatusMap[queue.status]?.text || queue.status}</span></span>
-                </div>
-                <div class="detail-item">
-                    <span class="detail-label">` + _t('batchQueueDetailModal.createdAt') + `</span>
-                    <span class="detail-value">${new Date(queue.createdAt).toLocaleString()}</span>
-                </div>
-                ${queue.startedAt ? `<div class="detail-item">
-                    <span class="detail-label">` + _t('batchQueueDetailModal.startedAt') + `</span>
-                    <span class="detail-value">${new Date(queue.startedAt).toLocaleString()}</span>
-                </div>` : ''}
-                ${queue.completedAt ? `<div class="detail-item">
-                    <span class="detail-label">` + _t('batchQueueDetailModal.completedAt') + `</span>
-                    <span class="detail-value">${new Date(queue.completedAt).toLocaleString()}</span>
-                </div>` : ''}
-                <div class="detail-item">
-                    <span class="detail-label">` + _t('batchQueueDetailModal.taskTotal') + `</span>
-                    <span class="detail-value">${queue.tasks.length}</span>
-                </div>
+            </details>
             </div>
             <div class="batch-queue-tasks-list">
                 <h4>` + _t('batchQueueDetailModal.taskList') + `</h4>
@@ -1834,6 +1921,28 @@ async function deleteBatchTask(queueId, taskId) {
     }
 }
 
+async function updateBatchQueueScheduleEnabled(enabled) {
+    const queueId = batchQueuesState.currentQueueId;
+    if (!queueId) return;
+    try {
+        const response = await apiFetch(`/api/batch-tasks/${queueId}/schedule-enabled`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ scheduleEnabled: enabled }),
+        });
+        if (!response.ok) {
+            const result = await response.json().catch(() => ({}));
+            throw new Error(result.error || _t('batchQueueDetailModal.scheduleToggleFailed'));
+        }
+        showBatchQueueDetail(queueId);
+        refreshBatchQueues();
+    } catch (e) {
+        console.error(e);
+        alert(_t('batchQueueDetailModal.scheduleToggleFailed') + ': ' + e.message);
+        showBatchQueueDetail(queueId);
+    }
+}
+
 // 导出函数
 window.showBatchImportModal = showBatchImportModal;
 window.closeBatchImportModal = closeBatchImportModal;
@@ -1857,3 +1966,28 @@ window.closeAddBatchTaskModal = closeAddBatchTaskModal;
 window.saveAddBatchTask = saveAddBatchTask;
 window.deleteBatchTaskFromElement = deleteBatchTaskFromElement;
 window.deleteBatchQueueFromList = deleteBatchQueueFromList;
+window.handleBatchScheduleModeChange = handleBatchScheduleModeChange;
+window.updateBatchQueueScheduleEnabled = updateBatchQueueScheduleEnabled;
+
+// 语言切换后，列表/分页/详情弹窗由 JS 渲染的文案需用当前语言重绘（applyTranslations 不会处理 innerHTML 内容）
+document.addEventListener('languagechange', function () {
+    try {
+        const tasksPage = document.getElementById('page-tasks');
+        if (!tasksPage || !tasksPage.classList.contains('active')) {
+            return;
+        }
+        if (document.getElementById('batch-queues-list')) {
+            renderBatchQueues();
+        }
+        const detailModal = document.getElementById('batch-queue-detail-modal');
+        if (
+            detailModal &&
+            detailModal.style.display === 'block' &&
+            batchQueuesState.currentQueueId
+        ) {
+            showBatchQueueDetail(batchQueuesState.currentQueueId);
+        }
+    } catch (e) {
+        console.warn('languagechange tasks refresh failed', e);
+    }
+});

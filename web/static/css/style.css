@@ -8196,6 +8196,10 @@ header {
     overflow: hidden;
 }
 
+.batch-queues-filters.tasks-filters {
+    margin-bottom: 12px;
+}
+
 .batch-queues-header {
     display: flex;
     justify-content: space-between;
@@ -8214,24 +8218,368 @@ header {
 .batch-queues-list {
     display: flex;
     flex-direction: column;
-    gap: 16px;
-    margin-bottom: 16px;
+    gap: 12px;
+    margin-bottom: 28px;
 }
 
 .batch-queue-item {
     background: var(--bg-primary);
     border: 1px solid var(--border-color);
-    border-radius: 12px;
-    padding: 20px;
+    border-radius: 14px;
+    padding: 14px 16px;
     box-shadow: var(--shadow-sm);
-    transition: all 0.2s ease;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
     cursor: pointer;
 }
 
 .batch-queue-item:hover {
     box-shadow: var(--shadow-md);
-    transform: translateY(-2px);
+    transform: translateY(-1px);
     border-color: var(--accent-color);
+}
+
+.batch-queue-item--cron-wait {
+    border-left: 3px solid var(--accent-color);
+}
+
+.batch-queue-item--cron-wait:hover {
+    border-color: var(--accent-color);
+}
+
+.batch-queue-item__inner {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-width: 0;
+}
+
+.batch-queue-item__top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px 14px;
+}
+
+.batch-queue-item__top-actions {
+    flex-shrink: 0;
+    margin-top: 1px;
+}
+
+.batch-queue-icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    border-radius: 10px;
+    border: 1px solid var(--border-color);
+    background: var(--bg-secondary);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+}
+
+.batch-queue-icon-btn:hover {
+    color: var(--error-color, #dc3545);
+    border-color: rgba(220, 53, 69, 0.35);
+    background: rgba(220, 53, 69, 0.06);
+}
+
+.batch-queue-icon-btn__svg {
+    display: block;
+}
+
+.batch-queue-item__band {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px 16px;
+    padding: 12px 14px;
+    margin: 0;
+    background: var(--bg-secondary);
+    border-radius: 10px;
+    border: 1px solid var(--border-color);
+}
+
+.batch-queue-item__band-left {
+    flex: 1 1 220px;
+    min-width: 0;
+}
+
+.batch-queue-item__band-right {
+    flex: 1 1 200px;
+    min-width: 160px;
+    max-width: 100%;
+    margin-left: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    align-items: stretch;
+}
+
+.batch-queue-progress-meta--band {
+    align-items: stretch;
+    text-align: right;
+}
+
+.batch-queue-progress-meta--band .batch-queue-progress-note {
+    text-align: right;
+    max-width: none;
+}
+
+@media (max-width: 520px) {
+    .batch-queue-item__band-right {
+        margin-left: 0;
+        flex-basis: 100%;
+    }
+
+    .batch-queue-progress-meta--band {
+        text-align: left;
+    }
+
+    .batch-queue-progress-meta--band .batch-queue-progress-note {
+        text-align: left;
+    }
+}
+
+.batch-queue-card-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px 20px;
+    margin-bottom: 12px;
+}
+
+.batch-queue-primary {
+    flex: 1 1 280px;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.batch-queue-card-title {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    line-height: 1.35;
+    letter-spacing: -0.015em;
+}
+
+.batch-queue-card-title--muted {
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.batch-queue-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+}
+
+.batch-queue-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 11px;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    max-width: 100%;
+}
+
+.batch-queue-chip-emoji {
+    font-size: 0.875rem;
+    line-height: 1;
+    flex-shrink: 0;
+}
+
+.batch-queue-chip-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 200px;
+}
+
+.batch-queue-chip--role .batch-queue-chip-text {
+    max-width: 160px;
+}
+
+.batch-queue-chip--schedule {
+    color: var(--accent-color);
+    border-color: var(--border-color);
+    background: var(--bg-primary);
+    box-shadow: inset 2px 0 0 0 var(--accent-color);
+}
+
+.batch-queue-chip--warn {
+    color: #b45309;
+    border-color: rgba(180, 83, 9, 0.35);
+    background: rgba(251, 191, 36, 0.12);
+}
+
+.batch-queue-status-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 12px;
+}
+
+.batch-queue-next-run {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    border-radius: 10px;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-left: 3px solid var(--accent-color);
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.batch-queue-next-run__icon {
+    font-size: 1rem;
+    line-height: 1;
+    opacity: 0.88;
+}
+
+.batch-queue-next-run__text {
+    line-height: 1.35;
+}
+
+.batch-queue-footnotes {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 8px;
+    margin-top: 2px;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
+.batch-queue-footnotes__id code {
+    font-size: 0.7rem;
+    padding: 2px 7px;
+    border-radius: 6px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    word-break: break-all;
+    color: var(--text-secondary);
+}
+
+.batch-queue-footnotes__sep {
+    opacity: 0.45;
+    user-select: none;
+}
+
+.batch-queue-side {
+    flex: 0 1 232px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 10px;
+}
+
+.batch-queue-delete-btn {
+    font-size: 0.75rem !important;
+    padding: 5px 12px !important;
+    color: var(--text-secondary) !important;
+    border-color: var(--border-color) !important;
+    background: var(--bg-primary) !important;
+}
+
+.batch-queue-delete-btn:hover {
+    color: var(--error-color, #dc3545) !important;
+    border-color: rgba(220, 53, 69, 0.4) !important;
+    background: rgba(220, 53, 69, 0.06) !important;
+}
+
+.batch-queue-progress-stack {
+    width: 100%;
+    min-width: 200px;
+}
+
+.batch-queue-progress-bar.batch-queue-progress-bar--card {
+    height: 10px;
+    border-radius: 999px;
+    background: var(--bg-secondary);
+    overflow: hidden;
+}
+
+.batch-queue-progress-fill--cron-wait {
+    background: linear-gradient(90deg, var(--accent-color), var(--accent-hover), var(--accent-color));
+    background-size: 200% 100%;
+    animation: batch-queue-progress-shimmer 2.4s ease infinite;
+}
+
+@keyframes batch-queue-progress-shimmer {
+    0% {
+        background-position: 100% 0;
+    }
+    100% {
+        background-position: -100% 0;
+    }
+}
+
+.batch-queue-progress-stack .batch-queue-progress-meta {
+    width: 100%;
+    align-items: flex-end;
+}
+
+.batch-queue-progress-fraction {
+    color: var(--text-secondary);
+    font-weight: 400;
+    font-size: 0.8125rem;
+}
+
+.batch-queue-stats--pills {
+    margin: 0;
+    padding-top: 10px;
+    border-top: 1px solid var(--border-color);
+    gap: 8px;
+}
+
+.batch-queue-stat-pill {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 6px;
+    padding: 5px 11px;
+    border-radius: 8px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    font-size: 0.75rem;
+}
+
+.batch-queue-stat-pill__k {
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.batch-queue-stat-pill__v {
+    font-weight: 600;
+    color: var(--text-primary);
+    font-variant-numeric: tabular-nums;
+}
+
+.batch-queue-stat-pill--ok .batch-queue-stat-pill__v {
+    color: var(--success-color);
+}
+
+.batch-queue-stat-pill--err .batch-queue-stat-pill__v {
+    color: var(--error-color);
+}
+
+.batch-queue-stat-pill--muted .batch-queue-stat-pill__v {
+    color: var(--text-secondary);
 }
 
 .batch-queue-header {
@@ -8273,10 +8621,104 @@ header {
     border: 1px solid rgba(0, 123, 255, 0.3);
 }
 
+.batch-queue-cron-active {
+    box-shadow: 0 0 0 1px rgba(0, 123, 255, 0.15);
+}
+
+.batch-queue-status-paused {
+    background: rgba(255, 193, 7, 0.12);
+    color: #b38600;
+    border: 1px solid rgba(255, 193, 7, 0.45);
+}
+
 .batch-queue-status-completed {
     background: rgba(40, 167, 69, 0.1);
     color: var(--success-color);
     border: 1px solid rgba(40, 167, 69, 0.3);
+}
+
+/* Cron 队列：本轮跑完、等待下次触发（区别于「一次性任务已完成」） */
+.batch-queue-status-cron-cycle {
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    border: 1px dashed var(--accent-color);
+}
+
+.batch-queue-status-wrap {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    max-width: 100%;
+}
+
+.batch-queue-cron-sublabel {
+    font-size: 0.75rem;
+    color: var(--accent-color);
+    font-weight: 500;
+    line-height: 1.35;
+    max-width: 280px;
+}
+
+.batch-queue-cron-sublabel.detail {
+    margin-top: 6px;
+    max-width: none;
+}
+
+.batch-queue-detail-status-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+}
+
+.batch-queue-progress-meta {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+    min-width: 0;
+}
+
+.batch-queue-progress-note {
+    font-size: 0.72rem;
+    color: var(--text-secondary);
+    line-height: 1.35;
+    text-align: right;
+    max-width: 240px;
+}
+
+.batch-queue-progress-note.detail {
+    text-align: left;
+    max-width: none;
+    margin-top: 2px;
+    opacity: 0.95;
+}
+
+.batch-queue-cron-callout {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    padding: 12px 14px;
+    margin-bottom: 8px;
+    border-radius: 10px;
+    border: 1px solid var(--border-color);
+    border-left: 3px solid var(--accent-color);
+    background: var(--bg-secondary);
+}
+
+.batch-queue-cron-callout-icon {
+    font-size: 1.25rem;
+    line-height: 1.2;
+    flex-shrink: 0;
+    opacity: 0.9;
+}
+
+.batch-queue-cron-callout p {
+    margin: 0;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    color: var(--text-primary);
 }
 
 .batch-queue-status-cancelled {
@@ -8335,6 +8777,303 @@ header {
 
 .batch-queue-stats span {
     white-space: nowrap;
+}
+
+/* 批量队列详情：信息分层（状态 → 摘要 → 告警 → 折叠技术信息） */
+.batch-queue-detail-layout {
+    margin-bottom: 20px;
+}
+
+.batch-queue-detail-hero {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 14px 16px;
+    margin-bottom: 14px;
+    background: var(--bg-secondary);
+    border-radius: 10px;
+    border: 1px solid var(--border-color);
+}
+
+.batch-queue-detail-hero__sub {
+    margin: 0;
+    font-size: 0.875rem;
+    color: var(--text-primary);
+    line-height: 1.45;
+}
+
+.batch-queue-detail-hero__note {
+    margin: 0;
+    font-size: 0.8125rem;
+    color: var(--text-secondary);
+    line-height: 1.45;
+}
+
+.batch-queue-detail-kv {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 10px 20px;
+    margin-bottom: 14px;
+}
+
+.bq-kv {
+    display: grid;
+    grid-template-columns: minmax(100px, 34%) 1fr;
+    gap: 8px 12px;
+    align-items: start;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border-color);
+    font-size: 0.875rem;
+}
+
+.bq-kv--block {
+    grid-column: 1 / -1;
+    grid-template-columns: minmax(100px, 28%) 1fr;
+}
+
+.bq-kv:last-child {
+    border-bottom: none;
+}
+
+.bq-kv__k {
+    color: var(--text-secondary);
+    font-weight: 500;
+    font-size: 0.8125rem;
+}
+
+.bq-kv__v {
+    color: var(--text-primary);
+    word-break: break-word;
+}
+
+.bq-kv__v code {
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    font-size: 0.8125rem;
+    background: var(--bg-secondary);
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+.bq-kv__v--control {
+    min-width: 0;
+}
+
+@media (max-width: 520px) {
+    .bq-kv,
+    .bq-kv--block {
+        grid-template-columns: 1fr;
+        gap: 4px;
+    }
+}
+
+.bq-cron-toggle {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    cursor: pointer;
+    margin: 0;
+}
+
+.bq-cron-toggle input {
+    margin-top: 3px;
+    flex-shrink: 0;
+}
+
+.bq-cron-toggle__hint {
+    font-size: 0.8125rem;
+    color: var(--text-secondary);
+    line-height: 1.45;
+}
+
+.bq-alert {
+    padding: 10px 12px;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    font-size: 0.8125rem;
+}
+
+.bq-alert--err {
+    background: rgba(220, 53, 69, 0.07);
+    border: 1px solid rgba(220, 53, 69, 0.28);
+    color: var(--text-primary);
+}
+
+.bq-alert--err strong {
+    display: block;
+    color: var(--error-color);
+    font-size: 0.8125rem;
+    margin-bottom: 4px;
+}
+
+.bq-alert--err p {
+    margin: 0;
+    color: var(--text-primary);
+    word-break: break-word;
+}
+
+.batch-queue-detail-tech {
+    margin-bottom: 8px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--bg-primary);
+    padding: 0 12px;
+}
+
+.batch-queue-detail-tech__sum {
+    cursor: pointer;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    padding: 10px 0;
+    list-style: none;
+}
+
+.batch-queue-detail-tech__sum::-webkit-details-marker {
+    display: none;
+}
+
+.batch-queue-detail-tech__body {
+    padding: 4px 0 12px;
+    border-top: 1px solid var(--border-color);
+}
+
+.batch-queue-detail-tech__body .bq-kv:first-child {
+    padding-top: 10px;
+}
+
+.batch-queue-cron-callout--compact {
+    margin-bottom: 12px;
+    padding: 10px 12px;
+}
+
+.batch-queue-cron-callout--compact p {
+    font-size: 0.8125rem;
+}
+
+/* 列表卡片紧凑布局 */
+.batch-queue-item__config {
+    margin: 4px 0 0;
+    font-size: 0.8125rem;
+    color: var(--text-secondary);
+    line-height: 1.4;
+}
+
+.batch-queue-item__idline {
+    margin: 6px 0 0;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 6px;
+}
+
+.batch-queue-item__idline code {
+    font-size: 0.7rem;
+    padding: 1px 6px;
+    border-radius: 4px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    word-break: break-all;
+}
+
+.batch-queue-item__idsep {
+    opacity: 0.45;
+    user-select: none;
+}
+
+.batch-queue-inline-warn {
+    color: #b45309;
+    font-weight: 500;
+    font-size: 0.8125rem;
+}
+
+.batch-queue-item__mid {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px 16px;
+    padding: 10px 0 6px;
+    border-top: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.batch-queue-item__mid-left {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 12px;
+    flex: 1 1 200px;
+    min-width: 0;
+}
+
+.batch-queue-item__sublabel {
+    font-size: 0.8125rem;
+    color: var(--text-primary);
+    line-height: 1.35;
+}
+
+.batch-queue-item__mid-right {
+    flex: 0 1 200px;
+    min-width: 140px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    align-items: stretch;
+}
+
+.batch-queue-progress-bar--list {
+    height: 8px;
+}
+
+.batch-queue-item__pct {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    text-align: right;
+}
+
+.batch-queue-item__pct-frac {
+    font-variant-numeric: tabular-nums;
+}
+
+.batch-queue-statsline {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 0;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    padding-top: 8px;
+}
+
+.batch-queue-statsline__sep {
+    margin: 0 8px;
+    opacity: 0.4;
+    user-select: none;
+}
+
+.batch-queue-statsline__item--ok {
+    color: var(--success-color);
+}
+
+.batch-queue-statsline__item--err {
+    color: var(--error-color);
+}
+
+/* 任务列表与分页条分离，避免与最后一张卡片贴在一起 */
+#batch-queues-pagination.pagination-fixed {
+    margin-top: 8px;
+    padding-top: 10px;
+}
+
+#batch-queues-pagination .pagination {
+    padding: 12px 16px 12px;
+    font-size: 0.875rem;
+}
+
+#batch-queues-pagination .pagination-info {
+    color: var(--text-secondary);
 }
 
 .batch-queue-detail-info {
@@ -8421,12 +9160,21 @@ header {
     color: var(--text-primary);
 }
 
+.batch-queue-detail-layout + .batch-queue-tasks-list h4 {
+    margin-top: 4px;
+}
+
+.batch-queue-item__title-col {
+    flex: 1;
+    min-width: 0;
+}
+
 .batch-task-item {
     background: var(--bg-primary);
     border: 1px solid var(--border-color);
     border-radius: 8px;
-    padding: 16px;
-    margin-bottom: 12px;
+    padding: 12px 14px;
+    margin-bottom: 10px;
     transition: all 0.2s ease;
 }
 
@@ -8556,14 +9304,55 @@ header {
         flex-direction: column;
         align-items: flex-start;
     }
-    
+
+    .batch-queue-item__top {
+        flex-wrap: wrap;
+        gap: 8px 10px;
+    }
+
+    .batch-queue-item__mid {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .batch-queue-item__mid-right {
+        flex: 1 1 auto;
+        max-width: none;
+    }
+
+    .batch-queue-item__pct {
+        text-align: left;
+    }
+
+    .batch-queue-card-row {
+        flex-direction: column;
+    }
+
+    .batch-queue-side {
+        flex-basis: auto;
+        width: 100%;
+        align-items: stretch;
+    }
+
+    .batch-queue-delete-btn {
+        align-self: flex-end;
+    }
+
+    .batch-queue-progress-stack {
+        min-width: 0;
+    }
+
     .batch-queue-progress {
         width: 100%;
     }
-    
+
     .batch-queue-stats {
         flex-direction: column;
         gap: 8px;
+    }
+
+    .batch-queue-stats--pills {
+        justify-content: flex-start;
     }
     
     .batch-task-header {

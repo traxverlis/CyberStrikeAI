@@ -125,8 +125,6 @@ async function loadConfig(loadTools = true) {
         if (maMode) maMode.value = (ma.default_mode === 'multi') ? 'multi' : 'single';
         const maRobot = document.getElementById('multi-agent-robot-use');
         if (maRobot) maRobot.checked = ma.robot_use_multi_agent === true;
-        const maBatch = document.getElementById('multi-agent-batch-use');
-        if (maBatch) maBatch.checked = ma.batch_use_multi_agent === true;
         
         // 填充知识库配置
         const knowledgeEnabledCheckbox = document.getElementById('knowledge-enabled');
@@ -820,7 +818,7 @@ async function applySettings() {
                 enabled: document.getElementById('multi-agent-enabled')?.checked === true,
                 default_mode: document.getElementById('multi-agent-default-mode')?.value === 'multi' ? 'multi' : 'single',
                 robot_use_multi_agent: document.getElementById('multi-agent-robot-use')?.checked === true,
-                batch_use_multi_agent: document.getElementById('multi-agent-batch-use')?.checked === true
+                batch_use_multi_agent: false
             },
             knowledge: knowledgeConfig,
             robots: {
