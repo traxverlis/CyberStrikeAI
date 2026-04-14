@@ -325,6 +325,17 @@ func (h *ConfigHandler) GetTools(c *gin.Context) {
 		searchTermLower = strings.ToLower(searchTerm)
 	}
 
+	// 解析状态筛选参数: "true" = 仅已启用, "false" = 仅已停用, "" = 全部
+	enabledFilter := c.Query("enabled")
+	var filterEnabled *bool
+	if enabledFilter == "true" {
+		v := true
+		filterEnabled = &v
+	} else if enabledFilter == "false" {
+		v := false
+		filterEnabled = &v
+	}
+
 	// 解析角色参数，用于过滤工具并标注启用状态
 	roleName := c.Query("role")
 	var roleToolsSet map[string]bool // 角色配置的工具集合
@@ -388,6 +399,11 @@ func (h *ConfigHandler) GetTools(c *gin.Context) {
 			}
 		}
 
+		// 状态筛选
+		if filterEnabled != nil && toolInfo.Enabled != *filterEnabled {
+			continue
+		}
+
 		allTools = append(allTools, toolInfo)
 	}
 
@@ -444,6 +460,11 @@ func (h *ConfigHandler) GetTools(c *gin.Context) {
 				}
 			}
 
+			// 状态筛选
+			if filterEnabled != nil && toolInfo.Enabled != *filterEnabled {
+				continue
+			}
+
 			allTools = append(allTools, toolInfo)
 		}
 	}
@@ -484,6 +505,11 @@ func (h *ConfigHandler) GetTools(c *gin.Context) {
 						toolInfo.RoleEnabled = &roleEnabled
 					}
 				}
+			}
+
+			// 状态筛选
+			if filterEnabled != nil && toolInfo.Enabled != *filterEnabled {
+				continue
 			}
 
 			allTools = append(allTools, toolInfo)
