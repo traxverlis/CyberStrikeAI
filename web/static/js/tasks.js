@@ -937,7 +937,11 @@ async function createBatchQueue() {
         alert(_t('batchImportModal.cronExprRequired'));
         return;
     }
-    
+    if (scheduleMode === 'cron' && !/^\S+\s+\S+\s+\S+\s+\S+\s+\S+$/.test(cronExpr)) {
+        alert(_t('batchImportModal.cronExprInvalid') || 'Cron 表达式格式错误，需要 5 段（分 时 日 月 周）');
+        return;
+    }
+
     try {
         const response = await apiFetch('/api/batch-tasks', {
             method: 'POST',
@@ -1372,10 +1376,36 @@ async function showBatchQueueDetail(queueId) {
                 ${showProgressNoteInModal ? `<p class="batch-queue-detail-hero__note">${escapeHtml(pres.progressNote)}</p>` : ''}
             </section>
             <section class="batch-queue-detail-kv">
-                ${queue.title ? `<div class="bq-kv"><span class="bq-kv__k">${escapeHtml(_t('batchQueueDetailModal.queueTitle'))}</span><span class="bq-kv__v">${escapeHtml(queue.title)}</span></div>` : ''}
+                <div class="bq-kv"><span class="bq-kv__k">${escapeHtml(_t('batchQueueDetailModal.queueTitle'))}</span><span class="bq-kv__v">${escapeHtml(queue.title || _t('tasks.batchQueueUntitled'))}${allowSubtaskMutation ? ` <button class="btn-secondary btn-small" onclick="showEditMetadataInline()" style="margin-left:8px;padding:1px 8px;font-size:12px;">${escapeHtml(_t('common.edit'))}</button>` : ''}</span></div>
+                <div class="bq-kv bq-kv--block" id="bq-edit-metadata-row" style="display:none;">
+                    <span class="bq-kv__k">${escapeHtml(_t('batchQueueDetailModal.editMetadata') || '编辑信息')}</span>
+                    <span class="bq-kv__v bq-kv__v--control">
+                        <label style="font-size:12px;margin-right:4px;">${escapeHtml(_t('batchQueueDetailModal.queueTitle'))}</label>
+                        <input type="text" id="bq-edit-title" value="${escapeHtml(queue.title || '')}" placeholder="${escapeHtml(_t('batchImportModal.queueTitleHint') || '')}" style="padding:4px 8px;border-radius:4px;border:1px solid #d0d0d0;font-size:13px;width:160px;" />
+                        <label style="font-size:12px;margin-left:12px;margin-right:4px;">${escapeHtml(_t('batchQueueDetailModal.role'))}</label>
+                        <select id="bq-edit-role" style="padding:4px 8px;border-radius:4px;border:1px solid #d0d0d0;font-size:13px;min-width:120px;">
+                            <option value="">${escapeHtml(_t('batchImportModal.defaultRole'))}</option>
+                            ${(Array.isArray(loadedRoles) ? loadedRoles : []).filter(r => r.name !== '默认' && r.enabled !== false).sort((a, b) => (a.name || '').localeCompare(b.name || '', 'zh-CN')).map(r => `<option value="${escapeHtml(r.name)}" ${r.name === (queue.role || '') ? 'selected' : ''}>${escapeHtml(r.name)}</option>`).join('')}
+                        </select>
+                        <button class="btn-primary btn-small" onclick="saveEditMetadata()" style="margin-left:8px;padding:2px 12px;font-size:12px;">${escapeHtml(_t('common.save'))}</button>
+                        <button class="btn-secondary btn-small" onclick="hideEditMetadataInline()" style="margin-left:4px;padding:2px 12px;font-size:12px;">${escapeHtml(_t('common.cancel'))}</button>
+                    </span>
+                </div>
                 <div class="bq-kv"><span class="bq-kv__k">${escapeHtml(_t('batchQueueDetailModal.role'))}</span><span class="bq-kv__v">${roleLineVal}</span></div>
                 <div class="bq-kv"><span class="bq-kv__k">${escapeHtml(_t('batchImportModal.agentMode'))}</span><span class="bq-kv__v">${escapeHtml(agentModeText)}</span></div>
-                <div class="bq-kv"><span class="bq-kv__k">${escapeHtml(_t('batchImportModal.scheduleMode'))}</span><span class="bq-kv__v">${scheduleDetail}</span></div>
+                <div class="bq-kv"><span class="bq-kv__k">${escapeHtml(_t('batchImportModal.scheduleMode'))}</span><span class="bq-kv__v">${scheduleDetail}${allowSubtaskMutation ? ` <button class="btn-secondary btn-small" onclick="showEditScheduleInline()" style="margin-left:8px;padding:1px 8px;font-size:12px;">${escapeHtml(_t('batchQueueDetailModal.editSchedule'))}</button>` : ''}</span></div>
+                <div class="bq-kv bq-kv--block" id="bq-edit-schedule-row" style="display:none;">
+                    <span class="bq-kv__k">${escapeHtml(_t('batchQueueDetailModal.editScheduleTitle'))}</span>
+                    <span class="bq-kv__v bq-kv__v--control">
+                        <select id="bq-edit-schedule-mode" onchange="toggleEditScheduleCronInput()" style="padding:4px 8px;border-radius:4px;border:1px solid #d0d0d0;font-size:13px;">
+                            <option value="manual" ${queue.scheduleMode !== 'cron' ? 'selected' : ''}>${escapeHtml(_t('batchImportModal.scheduleModeManual'))}</option>
+                            <option value="cron" ${queue.scheduleMode === 'cron' ? 'selected' : ''}>${escapeHtml(_t('batchImportModal.scheduleModeCron'))}</option>
+                        </select>
+                        <input type="text" id="bq-edit-cron-expr" value="${escapeHtml(queue.cronExpr || '')}" placeholder="${_t('batchImportModal.cronExprPlaceholder', { interpolation: { escapeValue: false } })}" style="margin-left:8px;padding:4px 8px;border-radius:4px;border:1px solid #d0d0d0;font-size:13px;width:220px;${queue.scheduleMode !== 'cron' ? 'display:none;' : ''}" />
+                        <button class="btn-primary btn-small" onclick="saveEditSchedule()" style="margin-left:8px;padding:2px 12px;font-size:12px;">${escapeHtml(_t('common.save'))}</button>
+                        <button class="btn-secondary btn-small" onclick="hideEditScheduleInline()" style="margin-left:4px;padding:2px 12px;font-size:12px;">${escapeHtml(_t('common.cancel'))}</button>
+                    </span>
+                </div>
                 <div class="bq-kv"><span class="bq-kv__k">${escapeHtml(_t('batchQueueDetailModal.taskTotal'))}</span><span class="bq-kv__v">${queue.tasks.length}</span></div>
                 ${queue.scheduleMode === 'cron' ? `<div class="bq-kv bq-kv--block"><span class="bq-kv__k">${escapeHtml(_t('batchQueueDetailModal.scheduleCronAuto'))}</span><span class="bq-kv__v bq-kv__v--control"><label class="bq-cron-toggle"><input type="checkbox" ${queue.scheduleEnabled !== false ? 'checked' : ''} onchange="updateBatchQueueScheduleEnabled(this.checked)" /><span class="bq-cron-toggle__hint">${escapeHtml(_t('batchQueueDetailModal.scheduleCronAutoHint'))}</span></label></span></div>` : ''}
             </section>
@@ -1408,6 +1438,7 @@ async function showBatchQueueDetail(queueId) {
                                 <span class="batch-task-message" title="${escapeHtml(task.message)}">${escapeHtml(task.message)}</span>
                                 ${canEdit ? `<button class="btn-secondary btn-small batch-task-edit-btn" onclick="editBatchTaskFromElement(this); event.stopPropagation();">` + _t('common.edit') + `</button>` : ''}
                                 ${canEdit ? `<button class="btn-secondary btn-small btn-danger batch-task-delete-btn" onclick="deleteBatchTaskFromElement(this); event.stopPropagation();">` + _t('common.delete') + `</button>` : ''}
+                                ${allowSubtaskMutation && task.status === 'failed' ? `<button class="btn-secondary btn-small" onclick="retryBatchTask('${queue.id}', '${task.id}'); event.stopPropagation();">` + _t('tasks.retryTask') + `</button>` : ''}
                                 ${task.conversationId ? `<button class="btn-secondary btn-small" onclick="viewBatchTaskConversation('${task.conversationId}'); event.stopPropagation();">` + _t('tasks.viewConversation') + `</button>` : ''}
                             </div>
                             ${task.startedAt ? `<div class="batch-task-time">` + _t('batchQueueDetailModal.startLabel') + `: ${new Date(task.startedAt).toLocaleString()}</div>` : ''}
@@ -1452,7 +1483,8 @@ async function showBatchQueueDetail(queueId) {
 async function startBatchQueue() {
     const queueId = batchQueuesState.currentQueueId;
     if (!queueId) return;
-    
+    const btn = document.getElementById('batch-queue-start-btn');
+    if (btn) { btn.disabled = true; }
     try {
         // Cron 队列点击“开始执行”会立即运行一轮，这里二次确认避免误触
         const queueResponse = await apiFetch(`/api/batch-tasks/${queueId}`);
@@ -1482,6 +1514,8 @@ async function startBatchQueue() {
     } catch (error) {
         console.error('启动批量任务失败:', error);
         alert(_t('tasks.startBatchQueueFailed') + ': ' + error.message);
+    } finally {
+        if (btn) { btn.disabled = false; }
     }
 }
 
@@ -1489,11 +1523,12 @@ async function startBatchQueue() {
 async function pauseBatchQueue() {
     const queueId = batchQueuesState.currentQueueId;
     if (!queueId) return;
-    
+
     if (!confirm(_t('tasks.pauseQueueConfirm'))) {
         return;
     }
-    
+    const btn = document.getElementById('batch-queue-pause-btn');
+    if (btn) { btn.disabled = true; }
     try {
         const response = await apiFetch(`/api/batch-tasks/${queueId}/pause`, {
             method: 'POST',
@@ -1510,6 +1545,8 @@ async function pauseBatchQueue() {
     } catch (error) {
         console.error('暂停批量任务失败:', error);
         alert(_t('tasks.pauseQueueFailed') + ': ' + error.message);
+    } finally {
+        if (btn) { btn.disabled = false; }
     }
 }
 
@@ -1517,11 +1554,12 @@ async function pauseBatchQueue() {
 async function deleteBatchQueue() {
     const queueId = batchQueuesState.currentQueueId;
     if (!queueId) return;
-    
+
     if (!confirm(_t('tasks.deleteQueueConfirm'))) {
         return;
     }
-    
+    const btn = document.getElementById('batch-queue-delete-btn');
+    if (btn) { btn.disabled = true; }
     try {
         const response = await apiFetch(`/api/batch-tasks/${queueId}`, {
             method: 'DELETE',
@@ -1537,6 +1575,8 @@ async function deleteBatchQueue() {
     } catch (error) {
         console.error('删除批量任务队列失败:', error);
         alert(_t('tasks.deleteQueueFailed') + ': ' + error.message);
+    } finally {
+        if (btn) { btn.disabled = false; }
     }
 }
 
@@ -1586,8 +1626,17 @@ function startBatchQueueRefresh(queueId) {
     if (batchQueuesState.refreshInterval) {
         clearInterval(batchQueuesState.refreshInterval);
     }
-    
+
     batchQueuesState.refreshInterval = setInterval(() => {
+        // 如果编辑或添加任务的模态框正在打开，跳过本次刷新防止丢失编辑内容
+        const editModal = document.getElementById('edit-batch-task-modal');
+        const addModal = document.getElementById('add-batch-task-modal');
+        const editScheduleRow = document.getElementById('bq-edit-schedule-row');
+        if ((editModal && editModal.style.display === 'block') ||
+            (addModal && addModal.style.display === 'block') ||
+            (editScheduleRow && editScheduleRow.style.display !== 'none')) {
+            return;
+        }
         if (batchQueuesState.currentQueueId === queueId) {
             showBatchQueueDetail(queueId);
             refreshBatchQueues();
@@ -1625,7 +1674,9 @@ function viewBatchTaskConversation(conversationId) {
 // 编辑批量任务的状态
 const editBatchTaskState = {
     queueId: null,
-    taskId: null
+    taskId: null,
+    _escHandler: null,
+    _saveHandler: null
 };
 
 // 从元素获取任务信息并打开编辑模态框
@@ -1676,24 +1727,30 @@ function editBatchTask(queueId, taskId, currentMessage) {
         messageInput.select();
     }, 100);
     
+    // 清理旧的事件监听器（防止泄漏）
+    if (editBatchTaskState._escHandler) {
+        document.removeEventListener('keydown', editBatchTaskState._escHandler);
+    }
+    if (editBatchTaskState._saveHandler) {
+        messageInput.removeEventListener('keydown', editBatchTaskState._saveHandler);
+    }
+
     // 添加ESC键监听
-    const handleKeyDown = (e) => {
+    editBatchTaskState._escHandler = (e) => {
         if (e.key === 'Escape') {
             closeEditBatchTaskModal();
-            document.removeEventListener('keydown', handleKeyDown);
         }
     };
-    document.addEventListener('keydown', handleKeyDown);
-    
+    document.addEventListener('keydown', editBatchTaskState._escHandler);
+
     // 添加Enter+Ctrl/Cmd保存功能
-    const handleKeyPress = (e) => {
+    editBatchTaskState._saveHandler = (e) => {
         if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
             e.preventDefault();
             saveBatchTask();
-            document.removeEventListener('keydown', handleKeyPress);
         }
     };
-    messageInput.addEventListener('keydown', handleKeyPress);
+    messageInput.addEventListener('keydown', editBatchTaskState._saveHandler);
 }
 
 // 关闭编辑批量任务模态框
@@ -1701,6 +1758,18 @@ function closeEditBatchTaskModal() {
     const modal = document.getElementById('edit-batch-task-modal');
     if (modal) {
         modal.style.display = 'none';
+    }
+    // 清理事件监听器
+    if (editBatchTaskState._escHandler) {
+        document.removeEventListener('keydown', editBatchTaskState._escHandler);
+        editBatchTaskState._escHandler = null;
+    }
+    if (editBatchTaskState._saveHandler) {
+        const messageInput = document.getElementById('edit-task-message');
+        if (messageInput) {
+            messageInput.removeEventListener('keydown', editBatchTaskState._saveHandler);
+        }
+        editBatchTaskState._saveHandler = null;
     }
     editBatchTaskState.queueId = null;
     editBatchTaskState.taskId = null;
@@ -1782,28 +1851,46 @@ function showAddBatchTaskModal() {
         messageInput.focus();
     }, 100);
     
+    // 清理旧的事件监听器
+    if (showAddBatchTaskModal._escHandler) {
+        document.removeEventListener('keydown', showAddBatchTaskModal._escHandler);
+    }
+    if (showAddBatchTaskModal._saveHandler && messageInput) {
+        messageInput.removeEventListener('keydown', showAddBatchTaskModal._saveHandler);
+    }
+
     // 添加ESC键监听
-    const handleKeyDown = (e) => {
+    showAddBatchTaskModal._escHandler = (e) => {
         if (e.key === 'Escape') {
             closeAddBatchTaskModal();
-            document.removeEventListener('keydown', handleKeyDown);
         }
     };
-    document.addEventListener('keydown', handleKeyDown);
-    
+    document.addEventListener('keydown', showAddBatchTaskModal._escHandler);
+
     // 添加Enter+Ctrl/Cmd保存功能
-    const handleKeyPress = (e) => {
+    showAddBatchTaskModal._saveHandler = (e) => {
         if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
             e.preventDefault();
             saveAddBatchTask();
-            messageInput.removeEventListener('keydown', handleKeyPress);
         }
     };
-    messageInput.addEventListener('keydown', handleKeyPress);
+    messageInput.addEventListener('keydown', showAddBatchTaskModal._saveHandler);
 }
 
 // 关闭添加批量任务模态框
 function closeAddBatchTaskModal() {
+    // 清理事件监听器
+    if (showAddBatchTaskModal._escHandler) {
+        document.removeEventListener('keydown', showAddBatchTaskModal._escHandler);
+        showAddBatchTaskModal._escHandler = null;
+    }
+    if (showAddBatchTaskModal._saveHandler) {
+        const messageInput = document.getElementById('add-task-message');
+        if (messageInput) {
+            messageInput.removeEventListener('keydown', showAddBatchTaskModal._saveHandler);
+        }
+        showAddBatchTaskModal._saveHandler = null;
+    }
     const modal = document.getElementById('add-batch-task-modal');
     const messageInput = document.getElementById('add-task-message');
     if (modal) {
@@ -1952,6 +2039,120 @@ async function updateBatchQueueScheduleEnabled(enabled) {
     }
 }
 
+// --- 元数据（标题/角色）内联编辑 ---
+function showEditMetadataInline() {
+    const row = document.getElementById('bq-edit-metadata-row');
+    if (row) row.style.display = '';
+}
+function hideEditMetadataInline() {
+    const row = document.getElementById('bq-edit-metadata-row');
+    if (row) row.style.display = 'none';
+}
+async function saveEditMetadata() {
+    const queueId = batchQueuesState.currentQueueId;
+    if (!queueId) return;
+    const titleInput = document.getElementById('bq-edit-title');
+    const roleInput = document.getElementById('bq-edit-role');
+    const title = titleInput ? titleInput.value.trim() : '';
+    const role = roleInput ? roleInput.value.trim() : '';
+    try {
+        const response = await apiFetch(`/api/batch-tasks/${queueId}/metadata`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ title, role }),
+        });
+        if (!response.ok) {
+            const result = await response.json().catch(() => ({}));
+            throw new Error(result.error || _t('tasks.updateTaskFailed'));
+        }
+        showBatchQueueDetail(queueId);
+        refreshBatchQueues();
+    } catch (e) {
+        console.error(e);
+        alert(e.message);
+    }
+}
+
+// --- 重试失败任务 ---
+async function retryBatchTask(queueId, taskId) {
+    if (!queueId || !taskId) return;
+    try {
+        // 将失败任务重置为 pending（通过更新消息触发状态刷新不可行，需后端支持）
+        // 利用已有的 update task API：先获取当前消息，再 PUT 回去（后端会保留 message 但不重置状态）
+        // 实际上后端 UpdateTaskMessage 不修改 status，所以我们需要直接调 API 修改 status
+        // 暂时方案：删除旧任务+重新添加同内容任务
+        const detailResp = await apiFetch(`/api/batch-tasks/${queueId}`);
+        if (!detailResp.ok) throw new Error(_t('tasks.getQueueDetailFailed'));
+        const detail = await detailResp.json();
+        const task = detail.queue.tasks.find(t => t.id === taskId);
+        if (!task) throw new Error('Task not found');
+        const message = task.message;
+        // 删除旧任务
+        await apiFetch(`/api/batch-tasks/${queueId}/tasks/${taskId}`, { method: 'DELETE' });
+        // 添加新任务（会自动为 pending）
+        await apiFetch(`/api/batch-tasks/${queueId}/tasks`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message }),
+        });
+        showBatchQueueDetail(queueId);
+        refreshBatchQueues();
+    } catch (e) {
+        console.error('重试任务失败:', e);
+        alert(e.message);
+    }
+}
+
+// --- 调度配置内联编辑 ---
+function showEditScheduleInline() {
+    const row = document.getElementById('bq-edit-schedule-row');
+    if (row) row.style.display = '';
+}
+function hideEditScheduleInline() {
+    const row = document.getElementById('bq-edit-schedule-row');
+    if (row) row.style.display = 'none';
+}
+function toggleEditScheduleCronInput() {
+    const modeSelect = document.getElementById('bq-edit-schedule-mode');
+    const cronInput = document.getElementById('bq-edit-cron-expr');
+    if (modeSelect && cronInput) {
+        cronInput.style.display = modeSelect.value === 'cron' ? '' : 'none';
+    }
+}
+async function saveEditSchedule() {
+    const queueId = batchQueuesState.currentQueueId;
+    if (!queueId) return;
+    const modeSelect = document.getElementById('bq-edit-schedule-mode');
+    const cronInput = document.getElementById('bq-edit-cron-expr');
+    if (!modeSelect) return;
+    const scheduleMode = modeSelect.value;
+    const cronExpr = cronInput ? cronInput.value.trim() : '';
+    if (scheduleMode === 'cron' && !cronExpr) {
+        alert(_t('batchImportModal.cronExprRequired'));
+        return;
+    }
+    if (scheduleMode === 'cron' && !/^\S+\s+\S+\s+\S+\s+\S+\s+\S+$/.test(cronExpr)) {
+        alert(_t('batchImportModal.cronExprInvalid') || 'Cron 表达式格式错误，需要 5 段（分 时 日 月 周）');
+        return;
+    }
+    try {
+        const response = await apiFetch(`/api/batch-tasks/${queueId}/schedule`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ scheduleMode, cronExpr }),
+        });
+        if (!response.ok) {
+            const result = await response.json().catch(() => ({}));
+            throw new Error(result.error || _t('batchQueueDetailModal.editScheduleError'));
+        }
+        showBatchQueueDetail(queueId);
+        refreshBatchQueues();
+    } catch (e) {
+        console.error(e);
+        alert(_t('batchQueueDetailModal.editScheduleError') + ': ' + e.message);
+    }
+}
+
 // 导出函数
 window.showBatchImportModal = showBatchImportModal;
 window.closeBatchImportModal = closeBatchImportModal;
@@ -1977,6 +2178,14 @@ window.deleteBatchTaskFromElement = deleteBatchTaskFromElement;
 window.deleteBatchQueueFromList = deleteBatchQueueFromList;
 window.handleBatchScheduleModeChange = handleBatchScheduleModeChange;
 window.updateBatchQueueScheduleEnabled = updateBatchQueueScheduleEnabled;
+window.showEditMetadataInline = showEditMetadataInline;
+window.hideEditMetadataInline = hideEditMetadataInline;
+window.saveEditMetadata = saveEditMetadata;
+window.retryBatchTask = retryBatchTask;
+window.showEditScheduleInline = showEditScheduleInline;
+window.hideEditScheduleInline = hideEditScheduleInline;
+window.toggleEditScheduleCronInput = toggleEditScheduleCronInput;
+window.saveEditSchedule = saveEditSchedule;
 
 // 语言切换后，列表/分页/详情弹窗由 JS 渲染的文案需用当前语言重绘（applyTranslations 不会处理 innerHTML 内容）
 document.addEventListener('languagechange', function () {
