@@ -9,6 +9,8 @@ var apiDocI18nTagToKey = map[string]string{
 	"角色管理": "roleManagement", "Skills管理": "skillsManagement", "监控": "monitoring",
 	"配置管理": "configManagement", "外部MCP管理": "externalMCPManagement", "攻击链": "attackChain",
 	"知识库": "knowledgeBase", "MCP": "mcp",
+	"FOFA信息收集": "fofaRecon", "终端": "terminal", "WebShell管理": "webshellManagement",
+	"对话附件": "chatUploads", "机器人集成": "robotIntegration", "多代理Markdown": "markdownAgents",
 }
 
 var apiDocI18nSummaryToKey = map[string]string{
@@ -45,6 +47,29 @@ var apiDocI18nSummaryToKey = map[string]string{
 	"获取检索日志": "getRetrievalLogs", "删除检索日志": "deleteRetrievalLog",
 	"MCP端点": "mcpEndpoint", "列出所有工具": "listAllTools", "调用工具": "invokeTool", "初始化连接": "initConnection",
 	"成功响应": "successResponse", "错误响应": "errorResponse",
+	// 新增缺失端点
+	"删除对话轮次": "deleteConversationTurn", "获取消息过程详情": "getMessageProcessDetails",
+	"重跑批量任务队列": "rerunBatchQueue", "修改队列元数据": "updateBatchQueueMetadata",
+	"修改队列调度配置": "updateBatchQueueSchedule", "开关Cron自动调度": "setBatchQueueScheduleEnabled",
+	"获取所有分组映射": "getAllGroupMappings",
+	"FOFA搜索": "fofaSearch", "自然语言解析为FOFA语法": "fofaParse",
+	"测试OpenAI API连接": "testOpenAI",
+	"执行终端命令": "terminalRun", "流式执行终端命令": "terminalRunStream", "WebSocket终端": "terminalWS",
+	"列出WebShell连接": "listWebshellConnections", "创建WebShell连接": "createWebshellConnection",
+	"更新WebShell连接": "updateWebshellConnection", "删除WebShell连接": "deleteWebshellConnection",
+	"获取连接状态": "getWebshellConnectionState", "保存连接状态": "saveWebshellConnectionState",
+	"获取AI对话历史": "getWebshellAIHistory", "列出AI对话": "listWebshellAIConversations",
+	"执行WebShell命令": "webshellExec", "WebShell文件操作": "webshellFileOp",
+	"列出附件": "listChatUploads", "上传附件": "uploadChatFile", "删除附件": "deleteChatUpload",
+	"下载附件": "downloadChatUpload", "获取附件文本内容": "getChatUploadContent",
+	"写入附件文本内容": "putChatUploadContent", "创建附件目录": "mkdirChatUpload", "重命名附件": "renameChatUpload",
+	"企业微信回调验证": "wecomCallbackVerify", "企业微信消息回调": "wecomCallbackMessage",
+	"钉钉消息回调": "dingtalkCallback", "飞书消息回调": "larkCallback", "测试机器人消息处理": "testRobot",
+	"列出Markdown代理": "listMarkdownAgents", "创建Markdown代理": "createMarkdownAgent",
+	"获取Markdown代理详情": "getMarkdownAgent", "更新Markdown代理": "updateMarkdownAgent", "删除Markdown代理": "deleteMarkdownAgent",
+	"列出技能包文件": "listSkillPackageFiles", "获取技能包文件内容": "getSkillPackageFile", "写入技能包文件": "putSkillPackageFile",
+	"批量获取工具名称": "batchGetToolNames",
+	"获取知识库统计": "getKnowledgeStats",
 }
 
 var apiDocI18nResponseDescToKey = map[string]string{
@@ -62,6 +87,16 @@ var apiDocI18nResponseDescToKey = map[string]string{
 	"任务不存在": "taskNotFound", "对话或分组不存在": "conversationOrGroupNotFound",
 	"取消请求已提交": "cancelSubmitted", "未找到正在执行的任务": "noRunningTask",
 	"消息发送成功，返回AI回复": "messageSent", "流式响应（Server-Sent Events）": "streamResponse",
+	// 新增缺失端点响应
+	"参数错误或删除失败": "badRequestOrDeleteFailed",
+	"参数错误": "paramError", "仅已完成或已取消的队列可以重跑": "onlyCompletedOrCancelledCanRerun",
+	"参数错误或队列正在运行中": "badRequestOrQueueRunning", "设置成功": "setSuccess",
+	"搜索成功": "searchSuccess", "解析成功": "parseSuccess", "测试结果": "testResult",
+	"执行完成": "executionDone", "SSE事件流": "sseEventStream", "WebSocket连接已建立": "wsEstablished",
+	"文件下载": "fileDownload", "文件不存在": "fileNotFound", "写入成功": "writeSuccess",
+	"重命名成功": "renameSuccess", "验证成功，返回解密后的echostr": "wecomVerifySuccess",
+	"处理成功": "processSuccess", "代理不存在": "agentNotFound", "保存成功": "saveSuccess",
+	"操作结果": "operationResult", "执行结果": "executionResult", "连接不存在": "connectionNotFound",
 }
 
 // enrichSpecWithI18nKeys 在 spec 的每个 operation 上写入 x-i18n-tags、x-i18n-summary，

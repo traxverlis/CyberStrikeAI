@@ -27,7 +27,7 @@ func RegisterBatchTaskMCPTools(mcpServer *mcp.Server, h *AgentHandler, logger *z
 	// --- list ---
 	reg(mcp.Tool{
 		Name:             builtin.ToolBatchTaskList,
-		Description:      "列出批量任务队列（精简摘要，省上下文）。含队列元数据、子任务 id/status/截断后的 message、各状态计数。完整子任务（含 result/error/conversationId/时间等）请用 batch_task_get(queue_id)。",
+		Description:      "列出批量任务队列（精简摘要，省上下文）。含队列元数据、子任务 id/status/截断后的 message、各状态计数。完整子任务（含 result/error/conversationId/时间等）请用 batch_task_get(queue_id)。\n\n⚠️ 调用约束：本工具属于「任务管理」模块，仅当用户明确提及查看/管理批量任务、任务队列时才可调用。不要在用户未要求时自行调用。",
 		ShortDescription: "列出批量任务队列",
 		InputSchema: map[string]interface{}{
 			"type": "object",
@@ -101,7 +101,7 @@ func RegisterBatchTaskMCPTools(mcpServer *mcp.Server, h *AgentHandler, logger *z
 	// --- get ---
 	reg(mcp.Tool{
 		Name:             builtin.ToolBatchTaskGet,
-		Description:      "根据 queue_id 获取单个批量任务队列详情（含子任务列表、Cron、调度开关与最近错误信息）。",
+		Description:      "根据 queue_id 获取单个批量任务队列详情（含子任务列表、Cron、调度开关与最近错误信息）。\n\n⚠️ 调用约束：本工具属于「任务管理」模块，仅当用户明确提及查看/管理批量任务、任务队列时才可调用。不要在用户未要求时自行调用。",
 		ShortDescription: "获取批量任务队列详情",
 		InputSchema: map[string]interface{}{
 			"type": "object",
@@ -128,11 +128,13 @@ func RegisterBatchTaskMCPTools(mcpServer *mcp.Server, h *AgentHandler, logger *z
 	// --- create ---
 	reg(mcp.Tool{
 		Name: builtin.ToolBatchTaskCreate,
-		Description: `【用途】应用内「任务管理 / 批量任务队列」：把多条彼此独立的用户指令登记成一条队列，便于在界面里查看进度、暂停/继续、定时重跑等。这是队列数据与调度入口，不是再开一个“子代理会话”替你探索当前问题。
+		Description: `⚠️ 调用约束：本工具属于「任务管理」模块，仅当用户明确要求创建批量任务、任务队列时才可调用。禁止在用户未提及”批量任务””任务队列””定时任务”等关键词时自行调用。如果用户只是让你做某件事，请在当前对话中直接完成，不要自作主张创建任务队列。
 
-【何时用】用户明确要批量排队执行、Cron 周期跑同一批指令、或需要与任务管理页面对齐时调用。需要即时追问、强依赖当前对话上下文的分析/编码，应在本对话内直接完成，不要为了“委派”而创建队列。
+【用途】应用内「任务管理 / 批量任务队列」：把多条彼此独立的用户指令登记成一条队列，便于在界面里查看进度、暂停/继续、定时重跑等。这是队列数据与调度入口，不是再开一个”子代理会话”替你探索当前问题。
 
-【参数】tasks（字符串数组）或 tasks_text（多行，每行一条）二选一；每项是一条将来由系统按队列顺序执行的指令文案。agent_mode：single（原生 ReAct，默认）、eino_single（Eino ADK 单代理）、deep / plan_execute / supervisor（需系统启用多代理）；兼容旧值 multi（视为 deep）。非“把主对话拆给子代理”。schedule_mode：manual（默认）或 cron；cron 须填 cron_expr（5 段，如 "0 */6 * * *"）。
+【何时用】用户明确要批量排队执行、Cron 周期跑同一批指令、或需要与任务管理页面对齐时调用。需要即时追问、强依赖当前对话上下文的分析/编码，应在本对话内直接完成，不要为了”委派”而创建队列。
+
+【参数】tasks（字符串数组）或 tasks_text（多行，每行一条）二选一；每项是一条将来由系统按队列顺序执行的指令文案。agent_mode：single（原生 ReAct，默认）、eino_single（Eino ADK 单代理）、deep / plan_execute / supervisor（需系统启用多代理）；兼容旧值 multi（视为 deep）。非”把主对话拆给子代理”。schedule_mode：manual（默认）或 cron；cron 须填 cron_expr（5 段，如 “0 */6 * * *”）。
 
 【执行】默认创建后为 pending，不自动跑。execute_now=true 可创建后立即跑；否则之后调用 batch_task_start。Cron 自动下一轮需 schedule_enabled 为 true（可用 batch_task_schedule_enabled）。`,
 		ShortDescription: "任务管理：创建批量任务队列（登记多条指令，可选立即或 Cron）",
@@ -239,7 +241,9 @@ func RegisterBatchTaskMCPTools(mcpServer *mcp.Server, h *AgentHandler, logger *z
 	reg(mcp.Tool{
 		Name: builtin.ToolBatchTaskStart,
 		Description: `启动或继续执行批量任务队列（pending / paused）。
-与 batch_task_create 配合使用：仅创建队列不会自动执行，需调用本工具才会开始跑子任务。`,
+与 batch_task_create 配合使用：仅创建队列不会自动执行，需调用本工具才会开始跑子任务。
+
+⚠️ 调用约束：本工具属于「任务管理」模块，仅当用户明确要求启动/继续批量任务时才可调用。不要在用户未要求时自行调用。`,
 		ShortDescription: "启动/继续批量任务队列（创建后需调用才会执行）",
 		InputSchema: map[string]interface{}{
 			"type": "object",
@@ -270,7 +274,7 @@ func RegisterBatchTaskMCPTools(mcpServer *mcp.Server, h *AgentHandler, logger *z
 	// --- rerun (reset + start for completed/cancelled queues) ---
 	reg(mcp.Tool{
 		Name:             builtin.ToolBatchTaskRerun,
-		Description:      "重跑已完成或已取消的批量任务队列。会重置所有子任务状态后重新执行一轮。",
+		Description:      "重跑已完成或已取消的批量任务队列。会重置所有子任务状态后重新执行一轮。\n\n⚠️ 调用约束：本工具属于「任务管理」模块，仅当用户明确要求重跑批量任务时才可调用。不要在用户未要求时自行调用。",
 		ShortDescription: "重跑批量任务队列",
 		InputSchema: map[string]interface{}{
 			"type": "object",
@@ -311,7 +315,7 @@ func RegisterBatchTaskMCPTools(mcpServer *mcp.Server, h *AgentHandler, logger *z
 	// --- pause ---
 	reg(mcp.Tool{
 		Name:             builtin.ToolBatchTaskPause,
-		Description:      "暂停正在运行的批量任务队列（当前子任务会被取消）。",
+		Description:      "暂停正在运行的批量任务队列（当前子任务会被取消）。\n\n⚠️ 调用约束：本工具属于「任务管理」模块，仅当用户明确要求暂停批量任务时才可调用。不要在用户未要求时自行调用。",
 		ShortDescription: "暂停批量任务队列",
 		InputSchema: map[string]interface{}{
 			"type": "object",
@@ -338,7 +342,7 @@ func RegisterBatchTaskMCPTools(mcpServer *mcp.Server, h *AgentHandler, logger *z
 	// --- delete queue ---
 	reg(mcp.Tool{
 		Name:             builtin.ToolBatchTaskDelete,
-		Description:      "删除批量任务队列及其子任务记录。",
+		Description:      "删除批量任务队列及其子任务记录。\n\n⚠️ 调用约束：本工具属于「任务管理」模块，仅当用户明确要求删除批量任务队列时才可调用。不要在用户未要求时自行调用。",
 		ShortDescription: "删除批量任务队列",
 		InputSchema: map[string]interface{}{
 			"type": "object",
@@ -365,7 +369,7 @@ func RegisterBatchTaskMCPTools(mcpServer *mcp.Server, h *AgentHandler, logger *z
 	// --- update metadata (title/role/agentMode) ---
 	reg(mcp.Tool{
 		Name:             builtin.ToolBatchTaskUpdateMetadata,
-		Description:      "修改批量任务队列的标题、角色和代理模式。仅在队列非 running 状态下可修改。",
+		Description:      "修改批量任务队列的标题、角色和代理模式。仅在队列非 running 状态下可修改。\n\n⚠️ 调用约束：本工具属于「任务管理」模块，仅当用户明确要求修改批量任务队列属性时才可调用。不要在用户未要求时自行调用。",
 		ShortDescription: "修改批量任务队列标题/角色/代理模式",
 		InputSchema: map[string]interface{}{
 			"type": "object",
@@ -410,7 +414,9 @@ func RegisterBatchTaskMCPTools(mcpServer *mcp.Server, h *AgentHandler, logger *z
 	reg(mcp.Tool{
 		Name: builtin.ToolBatchTaskUpdateSchedule,
 		Description: `修改批量任务队列的调度方式和 Cron 表达式。仅在队列非 running 状态下可修改。
-schedule_mode 为 cron 时必须提供有效 cron_expr；为 manual 时会清除 Cron 配置。`,
+schedule_mode 为 cron 时必须提供有效 cron_expr；为 manual 时会清除 Cron 配置。
+
+⚠️ 调用约束：本工具属于「任务管理」模块，仅当用户明确要求修改批量任务调度配置时才可调用。不要在用户未要求时自行调用。`,
 		ShortDescription: "修改批量任务调度配置（Cron 表达式）",
 		InputSchema: map[string]interface{}{
 			"type": "object",
@@ -467,7 +473,9 @@ schedule_mode 为 cron 时必须提供有效 cron_expr；为 manual 时会清除
 	reg(mcp.Tool{
 		Name: builtin.ToolBatchTaskScheduleEnabled,
 		Description: `设置是否允许 Cron 自动触发该队列。关闭后仍保留 Cron 表达式，仅停止定时自动跑；可用手工「启动」执行。
-仅对 schedule_mode 为 cron 的队列有意义。`,
+仅对 schedule_mode 为 cron 的队列有意义。
+
+⚠️ 调用约束：本工具属于「任务管理」模块，仅当用户明确要求开关批量任务自动调度时才可调用。不要在用户未要求时自行调用。`,
 		ShortDescription: "开关批量任务 Cron 自动调度",
 		InputSchema: map[string]interface{}{
 			"type": "object",
@@ -506,7 +514,7 @@ schedule_mode 为 cron 时必须提供有效 cron_expr；为 manual 时会清除
 	// --- add task ---
 	reg(mcp.Tool{
 		Name:             builtin.ToolBatchTaskAdd,
-		Description:      "向处于 pending 状态的队列追加一条子任务。",
+		Description:      "向处于 pending 状态的队列追加一条子任务。\n\n⚠️ 调用约束：本工具属于「任务管理」模块，仅当用户明确要求向批量任务队列添加子任务时才可调用。不要在用户未要求时自行调用。",
 		ShortDescription: "批量队列添加子任务",
 		InputSchema: map[string]interface{}{
 			"type": "object",
@@ -540,7 +548,7 @@ schedule_mode 为 cron 时必须提供有效 cron_expr；为 manual 时会清除
 	// --- update task ---
 	reg(mcp.Tool{
 		Name:             builtin.ToolBatchTaskUpdate,
-		Description:      "修改 pending 队列中仍为 pending 的子任务文案。",
+		Description:      "修改 pending 队列中仍为 pending 的子任务文案。\n\n⚠️ 调用约束：本工具属于「任务管理」模块，仅当用户明确要求修改批量子任务内容时才可调用。不要在用户未要求时自行调用。",
 		ShortDescription: "更新批量子任务内容",
 		InputSchema: map[string]interface{}{
 			"type": "object",
@@ -578,7 +586,7 @@ schedule_mode 为 cron 时必须提供有效 cron_expr；为 manual 时会清除
 	// --- remove task ---
 	reg(mcp.Tool{
 		Name:             builtin.ToolBatchTaskRemove,
-		Description:      "从 pending 队列中删除仍为 pending 的子任务。",
+		Description:      "从 pending 队列中删除仍为 pending 的子任务。\n\n⚠️ 调用约束：本工具属于「任务管理」模块，仅当用户明确要求删除批量子任务时才可调用。不要在用户未要求时自行调用。",
 		ShortDescription: "删除批量子任务",
 		InputSchema: map[string]interface{}{
 			"type": "object",

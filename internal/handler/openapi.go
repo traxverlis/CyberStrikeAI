@@ -4463,6 +4463,1617 @@ func (h *OpenAPIHandler) GetOpenAPISpec(c *gin.Context) {
 					},
 				},
 			},
+			// ==================== 对话交互 - 缺失端点 ====================
+			"/api/conversations/{id}/delete-turn": map[string]interface{}{
+				"post": map[string]interface{}{
+					"tags":        []string{"对话交互"},
+					"summary":     "删除对话轮次",
+					"description": "删除指定消息所在的对话轮次（从该轮 user 消息到下一轮 user 消息之前的所有消息），并清空 last_react 状态。",
+					"operationId": "deleteConversationTurn",
+					"parameters": []map[string]interface{}{
+						{
+							"name":        "id",
+							"in":          "path",
+							"required":    true,
+							"description": "对话ID",
+							"schema":      map[string]interface{}{"type": "string"},
+						},
+					},
+					"requestBody": map[string]interface{}{
+						"required": true,
+						"content": map[string]interface{}{
+							"application/json": map[string]interface{}{
+								"schema": map[string]interface{}{
+									"type": "object",
+									"required": []string{"messageId"},
+									"properties": map[string]interface{}{
+										"messageId": map[string]interface{}{
+											"type":        "string",
+											"description": "锚点消息ID，标识要删除的轮次",
+										},
+									},
+								},
+							},
+						},
+					},
+					"responses": map[string]interface{}{
+						"200": map[string]interface{}{
+							"description": "删除成功",
+							"content": map[string]interface{}{
+								"application/json": map[string]interface{}{
+									"schema": map[string]interface{}{
+										"type": "object",
+										"properties": map[string]interface{}{
+											"deletedMessageIds": map[string]interface{}{
+												"type":        "array",
+												"items":       map[string]interface{}{"type": "string"},
+												"description": "被删除的消息ID列表",
+											},
+											"message": map[string]interface{}{
+												"type":    "string",
+												"example": "ok",
+											},
+										},
+									},
+								},
+							},
+						},
+						"400": map[string]interface{}{"description": "参数错误或删除失败"},
+						"401": map[string]interface{}{"description": "未授权"},
+						"404": map[string]interface{}{"description": "对话不存在"},
+					},
+				},
+			},
+			"/api/messages/{id}/process-details": map[string]interface{}{
+				"get": map[string]interface{}{
+					"tags":        []string{"对话交互"},
+					"summary":     "获取消息过程详情",
+					"description": "按需加载指定消息的执行过程详情，包括工具调用、思考过程等事件。",
+					"operationId": "getMessageProcessDetails",
+					"parameters": []map[string]interface{}{
+						{
+							"name":        "id",
+							"in":          "path",
+							"required":    true,
+							"description": "消息ID",
+							"schema":      map[string]interface{}{"type": "string"},
+						},
+					},
+					"responses": map[string]interface{}{
+						"200": map[string]interface{}{
+							"description": "获取成功",
+							"content": map[string]interface{}{
+								"application/json": map[string]interface{}{
+									"schema": map[string]interface{}{
+										"type": "object",
+										"properties": map[string]interface{}{
+											"processDetails": map[string]interface{}{
+												"type": "array",
+												"items": map[string]interface{}{
+													"type": "object",
+													"properties": map[string]interface{}{
+														"id":             map[string]interface{}{"type": "string", "description": "详情记录ID"},
+														"messageId":      map[string]interface{}{"type": "string", "description": "所属消息ID"},
+														"conversationId": map[string]interface{}{"type": "string", "description": "所属对话ID"},
+														"eventType":      map[string]interface{}{"type": "string", "description": "事件类型（如tool_call, thinking等）"},
+														"message":        map[string]interface{}{"type": "string", "description": "事件消息"},
+														"data":           map[string]interface{}{"description": "事件附加数据（JSON对象）"},
+														"createdAt":      map[string]interface{}{"type": "string", "format": "date-time", "description": "创建时间"},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						"400": map[string]interface{}{"description": "参数错误"},
+						"401": map[string]interface{}{"description": "未授权"},
+					},
+				},
+			},
+
+			// ==================== 批量任务 - 缺失端点 ====================
+			"/api/batch-tasks/{queueId}/rerun": map[string]interface{}{
+				"post": map[string]interface{}{
+					"tags":        []string{"批量任务"},
+					"summary":     "重跑批量任务队列",
+					"description": "重置已完成或已取消的批量任务队列，重新开始执行所有任务。",
+					"operationId": "rerunBatchQueue",
+					"parameters": []map[string]interface{}{
+						{
+							"name":        "queueId",
+							"in":          "path",
+							"required":    true,
+							"description": "队列ID",
+							"schema":      map[string]interface{}{"type": "string"},
+						},
+					},
+					"responses": map[string]interface{}{
+						"200": map[string]interface{}{
+							"description": "重跑成功",
+							"content": map[string]interface{}{
+								"application/json": map[string]interface{}{
+									"schema": map[string]interface{}{
+										"type": "object",
+										"properties": map[string]interface{}{
+											"message": map[string]interface{}{"type": "string", "example": "批量任务已重新开始执行"},
+											"queueId": map[string]interface{}{"type": "string", "description": "队列ID"},
+										},
+									},
+								},
+							},
+						},
+						"400": map[string]interface{}{"description": "仅已完成或已取消的队列可以重跑"},
+						"401": map[string]interface{}{"description": "未授权"},
+						"404": map[string]interface{}{"description": "队列不存在"},
+					},
+				},
+			},
+			"/api/batch-tasks/{queueId}/metadata": map[string]interface{}{
+				"put": map[string]interface{}{
+					"tags":        []string{"批量任务"},
+					"summary":     "修改队列元数据",
+					"description": "修改批量任务队列的标题、角色和代理模式。",
+					"operationId": "updateBatchQueueMetadata",
+					"parameters": []map[string]interface{}{
+						{
+							"name":        "queueId",
+							"in":          "path",
+							"required":    true,
+							"description": "队列ID",
+							"schema":      map[string]interface{}{"type": "string"},
+						},
+					},
+					"requestBody": map[string]interface{}{
+						"required": true,
+						"content": map[string]interface{}{
+							"application/json": map[string]interface{}{
+								"schema": map[string]interface{}{
+									"type": "object",
+									"properties": map[string]interface{}{
+										"title":     map[string]interface{}{"type": "string", "description": "队列标题"},
+										"role":      map[string]interface{}{"type": "string", "description": "使用的角色名称"},
+										"agentMode": map[string]interface{}{"type": "string", "description": "代理模式", "enum": []string{"single", "eino_single", "deep", "plan_execute", "supervisor"}},
+									},
+								},
+							},
+						},
+					},
+					"responses": map[string]interface{}{
+						"200": map[string]interface{}{
+							"description": "更新成功",
+							"content": map[string]interface{}{
+								"application/json": map[string]interface{}{
+									"schema": map[string]interface{}{
+										"type": "object",
+										"properties": map[string]interface{}{
+											"queue": map[string]interface{}{"$ref": "#/components/schemas/BatchQueue"},
+										},
+									},
+								},
+							},
+						},
+						"400": map[string]interface{}{"description": "参数错误"},
+						"401": map[string]interface{}{"description": "未授权"},
+					},
+				},
+			},
+			"/api/batch-tasks/{queueId}/schedule": map[string]interface{}{
+				"put": map[string]interface{}{
+					"tags":        []string{"批量任务"},
+					"summary":     "修改队列调度配置",
+					"description": "修改批量任务队列的调度模式和Cron表达式。队列运行中无法修改。",
+					"operationId": "updateBatchQueueSchedule",
+					"parameters": []map[string]interface{}{
+						{
+							"name":        "queueId",
+							"in":          "path",
+							"required":    true,
+							"description": "队列ID",
+							"schema":      map[string]interface{}{"type": "string"},
+						},
+					},
+					"requestBody": map[string]interface{}{
+						"required": true,
+						"content": map[string]interface{}{
+							"application/json": map[string]interface{}{
+								"schema": map[string]interface{}{
+									"type": "object",
+									"properties": map[string]interface{}{
+										"scheduleMode": map[string]interface{}{"type": "string", "description": "调度模式", "enum": []string{"manual", "cron"}},
+										"cronExpr":     map[string]interface{}{"type": "string", "description": "Cron表达式（scheduleMode为cron时必填）", "example": "0 2 * * *"},
+									},
+								},
+							},
+						},
+					},
+					"responses": map[string]interface{}{
+						"200": map[string]interface{}{
+							"description": "更新成功",
+							"content": map[string]interface{}{
+								"application/json": map[string]interface{}{
+									"schema": map[string]interface{}{
+										"type": "object",
+										"properties": map[string]interface{}{
+											"queue": map[string]interface{}{"$ref": "#/components/schemas/BatchQueue"},
+										},
+									},
+								},
+							},
+						},
+						"400": map[string]interface{}{"description": "参数错误或队列正在运行中"},
+						"401": map[string]interface{}{"description": "未授权"},
+						"404": map[string]interface{}{"description": "队列不存在"},
+					},
+				},
+			},
+			"/api/batch-tasks/{queueId}/schedule-enabled": map[string]interface{}{
+				"put": map[string]interface{}{
+					"tags":        []string{"批量任务"},
+					"summary":     "开关Cron自动调度",
+					"description": "开启或关闭批量任务队列的Cron自动调度功能，手工执行不受影响。",
+					"operationId": "setBatchQueueScheduleEnabled",
+					"parameters": []map[string]interface{}{
+						{
+							"name":        "queueId",
+							"in":          "path",
+							"required":    true,
+							"description": "队列ID",
+							"schema":      map[string]interface{}{"type": "string"},
+						},
+					},
+					"requestBody": map[string]interface{}{
+						"required": true,
+						"content": map[string]interface{}{
+							"application/json": map[string]interface{}{
+								"schema": map[string]interface{}{
+									"type": "object",
+									"required": []string{"scheduleEnabled"},
+									"properties": map[string]interface{}{
+										"scheduleEnabled": map[string]interface{}{"type": "boolean", "description": "是否启用自动调度"},
+									},
+								},
+							},
+						},
+					},
+					"responses": map[string]interface{}{
+						"200": map[string]interface{}{
+							"description": "设置成功",
+							"content": map[string]interface{}{
+								"application/json": map[string]interface{}{
+									"schema": map[string]interface{}{
+										"type": "object",
+										"properties": map[string]interface{}{
+											"queue": map[string]interface{}{"$ref": "#/components/schemas/BatchQueue"},
+										},
+									},
+								},
+							},
+						},
+						"401": map[string]interface{}{"description": "未授权"},
+						"404": map[string]interface{}{"description": "队列不存在"},
+					},
+				},
+			},
+
+			// ==================== 对话分组 - 缺失端点 ====================
+			"/api/groups/mappings": map[string]interface{}{
+				"get": map[string]interface{}{
+					"tags":        []string{"对话分组"},
+					"summary":     "获取所有分组映射",
+					"description": "获取所有对话与分组之间的映射关系列表。",
+					"operationId": "getAllGroupMappings",
+					"responses": map[string]interface{}{
+						"200": map[string]interface{}{
+							"description": "获取成功",
+							"content": map[string]interface{}{
+								"application/json": map[string]interface{}{
+									"schema": map[string]interface{}{
+										"type": "array",
+										"items": map[string]interface{}{
+											"type": "object",
+											"properties": map[string]interface{}{
+												"conversation_id": map[string]interface{}{"type": "string", "description": "对话ID"},
+												"group_id":        map[string]interface{}{"type": "string", "description": "分组ID"},
+												"pinned":          map[string]interface{}{"type": "boolean", "description": "是否置顶"},
+											},
+										},
+									},
+								},
+							},
+						},
+						"401": map[string]interface{}{"description": "未授权"},
+					},
+				},
+			},
+
+			// ==================== FOFA信息收集 ====================
+			"/api/fofa/search": map[string]interface{}{
+				"post": map[string]interface{}{
+					"tags":        []string{"FOFA信息收集"},
+					"summary":     "FOFA搜索",
+					"description": "通过后端代理执行FOFA搜索查询，返回资产信息。",
+					"operationId": "fofaSearch",
+					"requestBody": map[string]interface{}{
+						"required": true,
+						"content": map[string]interface{}{
+							"application/json": map[string]interface{}{
+								"schema": map[string]interface{}{
+									"type": "object",
+									"required": []string{"query"},
+									"properties": map[string]interface{}{
+										"query":  map[string]interface{}{"type": "string", "description": "FOFA查询语法", "example": "domain=\"example.com\""},
+										"size":   map[string]interface{}{"type": "integer", "description": "返回数量（默认100，最大10000）", "default": 100},
+										"page":   map[string]interface{}{"type": "integer", "description": "页码（默认1）", "default": 1},
+										"fields": map[string]interface{}{"type": "string", "description": "返回字段，逗号分隔", "example": "host,ip,port,title"},
+										"full":   map[string]interface{}{"type": "boolean", "description": "是否查询全部数据", "default": false},
+									},
+								},
+							},
+						},
+					},
+					"responses": map[string]interface{}{
+						"200": map[string]interface{}{
+							"description": "搜索成功",
+							"content": map[string]interface{}{
+								"application/json": map[string]interface{}{
+									"schema": map[string]interface{}{
+										"type": "object",
+										"properties": map[string]interface{}{
+											"query":         map[string]interface{}{"type": "string", "description": "实际执行的查询"},
+											"size":          map[string]interface{}{"type": "integer"},
+											"page":          map[string]interface{}{"type": "integer"},
+											"total":         map[string]interface{}{"type": "integer", "description": "总匹配数"},
+											"fields":        map[string]interface{}{"type": "array", "items": map[string]interface{}{"type": "string"}},
+											"results_count": map[string]interface{}{"type": "integer"},
+											"results":       map[string]interface{}{"type": "array", "items": map[string]interface{}{"type": "object"}, "description": "搜索结果列表"},
+										},
+									},
+								},
+							},
+						},
+						"400": map[string]interface{}{"description": "参数错误"},
+						"401": map[string]interface{}{"description": "未授权"},
+					},
+				},
+			},
+			"/api/fofa/parse": map[string]interface{}{
+				"post": map[string]interface{}{
+					"tags":        []string{"FOFA信息收集"},
+					"summary":     "自然语言解析为FOFA语法",
+					"description": "使用AI将自然语言描述解析为FOFA查询语法，需人工确认后再执行查询。",
+					"operationId": "fofaParse",
+					"requestBody": map[string]interface{}{
+						"required": true,
+						"content": map[string]interface{}{
+							"application/json": map[string]interface{}{
+								"schema": map[string]interface{}{
+									"type": "object",
+									"required": []string{"text"},
+									"properties": map[string]interface{}{
+										"text": map[string]interface{}{"type": "string", "description": "自然语言描述", "example": "查找使用WordPress的网站"},
+									},
+								},
+							},
+						},
+					},
+					"responses": map[string]interface{}{
+						"200": map[string]interface{}{
+							"description": "解析成功",
+							"content": map[string]interface{}{
+								"application/json": map[string]interface{}{
+									"schema": map[string]interface{}{
+										"type": "object",
+										"properties": map[string]interface{}{
+											"query":       map[string]interface{}{"type": "string", "description": "生成的FOFA查询语法"},
+											"explanation": map[string]interface{}{"type": "string", "description": "语法解释"},
+											"warnings":    map[string]interface{}{"type": "array", "items": map[string]interface{}{"type": "string"}, "description": "潜在风险或歧义提示"},
+										},
+									},
+								},
+							},
+						},
+						"400": map[string]interface{}{"description": "参数错误"},
+						"401": map[string]interface{}{"description": "未授权"},
+					},
+				},
+			},
+
+			// ==================== 配置管理 - 缺失端点 ====================
+			"/api/config/test-openai": map[string]interface{}{
+				"post": map[string]interface{}{
+					"tags":        []string{"配置管理"},
+					"summary":     "测试OpenAI API连接",
+					"description": "测试指定的OpenAI/Claude API配置是否可用，发送一个最小请求验证连通性。",
+					"operationId": "testOpenAI",
+					"requestBody": map[string]interface{}{
+						"required": true,
+						"content": map[string]interface{}{
+							"application/json": map[string]interface{}{
+								"schema": map[string]interface{}{
+									"type": "object",
+									"required": []string{"api_key", "model"},
+									"properties": map[string]interface{}{
+										"provider": map[string]interface{}{"type": "string", "description": "LLM提供商（openai/claude）", "example": "openai"},
+										"base_url": map[string]interface{}{"type": "string", "description": "API基地址（可选，默认根据provider自动选择）"},
+										"api_key":  map[string]interface{}{"type": "string", "description": "API密钥"},
+										"model":    map[string]interface{}{"type": "string", "description": "模型名称", "example": "gpt-4"},
+									},
+								},
+							},
+						},
+					},
+					"responses": map[string]interface{}{
+						"200": map[string]interface{}{
+							"description": "测试结果",
+							"content": map[string]interface{}{
+								"application/json": map[string]interface{}{
+									"schema": map[string]interface{}{
+										"type": "object",
+										"properties": map[string]interface{}{
+											"success":    map[string]interface{}{"type": "boolean", "description": "是否连接成功"},
+											"error":      map[string]interface{}{"type": "string", "description": "失败原因（success=false时）"},
+											"model":      map[string]interface{}{"type": "string", "description": "实际使用的模型（success=true时）"},
+											"latency_ms": map[string]interface{}{"type": "number", "description": "延迟毫秒数（success=true时）"},
+										},
+									},
+								},
+							},
+						},
+						"400": map[string]interface{}{"description": "参数错误"},
+						"401": map[string]interface{}{"description": "未授权"},
+					},
+				},
+			},
+
+			// ==================== 终端 ====================
+			"/api/terminal/run": map[string]interface{}{
+				"post": map[string]interface{}{
+					"tags":        []string{"终端"},
+					"summary":     "执行终端命令",
+					"description": "在服务器上执行Shell命令并返回结果。",
+					"operationId": "terminalRun",
+					"requestBody": map[string]interface{}{
+						"required": true,
+						"content": map[string]interface{}{
+							"application/json": map[string]interface{}{
+								"schema": map[string]interface{}{
+									"type": "object",
+									"required": []string{"command"},
+									"properties": map[string]interface{}{
+										"command": map[string]interface{}{"type": "string", "description": "要执行的命令"},
+										"shell":   map[string]interface{}{"type": "string", "description": "Shell类型（默认sh/cmd）"},
+										"cwd":     map[string]interface{}{"type": "string", "description": "工作目录（可选）"},
+									},
+								},
+							},
+						},
+					},
+					"responses": map[string]interface{}{
+						"200": map[string]interface{}{
+							"description": "执行完成",
+							"content": map[string]interface{}{
+								"application/json": map[string]interface{}{
+									"schema": map[string]interface{}{
+										"type": "object",
+										"properties": map[string]interface{}{
+											"stdout":    map[string]interface{}{"type": "string", "description": "标准输出"},
+											"stderr":    map[string]interface{}{"type": "string", "description": "标准错误"},
+											"exit_code": map[string]interface{}{"type": "integer", "description": "退出码"},
+											"error":     map[string]interface{}{"type": "string", "description": "执行错误（可选）"},
+										},
+									},
+								},
+							},
+						},
+						"401": map[string]interface{}{"description": "未授权"},
+					},
+				},
+			},
+			"/api/terminal/run/stream": map[string]interface{}{
+				"post": map[string]interface{}{
+					"tags":        []string{"终端"},
+					"summary":     "流式执行终端命令",
+					"description": "以SSE流式方式执行Shell命令，实时返回输出。每个事件包含 JSON: {\"t\": \"out\"|\"err\"|\"exit\", \"d\": \"数据\", \"c\": 退出码}",
+					"operationId": "terminalRunStream",
+					"requestBody": map[string]interface{}{
+						"required": true,
+						"content": map[string]interface{}{
+							"application/json": map[string]interface{}{
+								"schema": map[string]interface{}{
+									"type": "object",
+									"required": []string{"command"},
+									"properties": map[string]interface{}{
+										"command": map[string]interface{}{"type": "string", "description": "要执行的命令"},
+										"shell":   map[string]interface{}{"type": "string", "description": "Shell类型（默认sh/cmd）"},
+										"cwd":     map[string]interface{}{"type": "string", "description": "工作目录（可选）"},
+									},
+								},
+							},
+						},
+					},
+					"responses": map[string]interface{}{
+						"200": map[string]interface{}{
+							"description": "SSE事件流",
+							"content": map[string]interface{}{
+								"text/event-stream": map[string]interface{}{
+									"schema": map[string]interface{}{
+										"type":        "string",
+										"description": "Server-Sent Events流，每个事件为JSON: {\"t\":\"out|err|exit\",\"d\":\"data\",\"c\":exitCode}",
+									},
+								},
+							},
+						},
+						"401": map[string]interface{}{"description": "未授权"},
+					},
+				},
+			},
+			"/api/terminal/ws": map[string]interface{}{
+				"get": map[string]interface{}{
+					"tags":        []string{"终端"},
+					"summary":     "WebSocket终端",
+					"description": "通过WebSocket建立交互式终端连接，支持PTY。客户端发送文本/二进制数据作为命令输入，也可发送JSON: {\"type\":\"resize\",\"cols\":80,\"rows\":24} 调整终端大小。服务端返回二进制PTY输出。",
+					"operationId": "terminalWS",
+					"responses": map[string]interface{}{
+						"101": map[string]interface{}{"description": "WebSocket连接已建立"},
+						"401": map[string]interface{}{"description": "未授权"},
+					},
+				},
+			},
+
+			// ==================== WebShell管理 ====================
+			"/api/webshell/connections": map[string]interface{}{
+				"get": map[string]interface{}{
+					"tags":        []string{"WebShell管理"},
+					"summary":     "列出WebShell连接",
+					"description": "获取所有已保存的WebShell连接配置列表。",
+					"operationId": "listWebshellConnections",
+					"responses": map[string]interface{}{
+						"200": map[string]interface{}{
+							"description": "获取成功",
+							"content": map[string]interface{}{
+								"application/json": map[string]interface{}{
+									"schema": map[string]interface{}{
+										"type": "array",
+										"items": map[string]interface{}{
+											"type": "object",
+											"properties": map[string]interface{}{
+												"id":         map[string]interface{}{"type": "string", "description": "连接ID"},
+												"url":        map[string]interface{}{"type": "string", "description": "WebShell URL"},
+												"password":   map[string]interface{}{"type": "string", "description": "连接密码"},
+												"type":       map[string]interface{}{"type": "string", "description": "Shell类型", "enum": []string{"php", "asp", "aspx", "jsp", "custom"}},
+												"method":     map[string]interface{}{"type": "string", "description": "请求方法", "enum": []string{"get", "post"}},
+												"cmd_param":  map[string]interface{}{"type": "string", "description": "命令参数名"},
+												"remark":     map[string]interface{}{"type": "string", "description": "备注"},
+												"created_at": map[string]interface{}{"type": "string", "format": "date-time"},
+											},
+										},
+									},
+								},
+							},
+						},
+						"401": map[string]interface{}{"description": "未授权"},
+					},
+				},
+				"post": map[string]interface{}{
+					"tags":        []string{"WebShell管理"},
+					"summary":     "创建WebShell连接",
+					"description": "保存一个新的WebShell连接配置。",
+					"operationId": "createWebshellConnection",
+					"requestBody": map[string]interface{}{
+						"required": true,
+						"content": map[string]interface{}{
+							"application/json": map[string]interface{}{
+								"schema": map[string]interface{}{
+									"type": "object",
+									"required": []string{"url"},
+									"properties": map[string]interface{}{
+										"url":       map[string]interface{}{"type": "string", "description": "WebShell URL"},
+										"password":  map[string]interface{}{"type": "string", "description": "连接密码"},
+										"type":      map[string]interface{}{"type": "string", "description": "Shell类型", "enum": []string{"php", "asp", "aspx", "jsp", "custom"}},
+										"method":    map[string]interface{}{"type": "string", "description": "请求方法", "enum": []string{"get", "post"}},
+										"cmd_param": map[string]interface{}{"type": "string", "description": "命令参数名"},
+										"remark":    map[string]interface{}{"type": "string", "description": "备注"},
+									},
+								},
+							},
+						},
+					},
+					"responses": map[string]interface{}{
+						"200": map[string]interface{}{"description": "创建成功"},
+						"400": map[string]interface{}{"description": "参数错误"},
+						"401": map[string]interface{}{"description": "未授权"},
+					},
+				},
+			},
+			"/api/webshell/connections/{id}": map[string]interface{}{
+				"put": map[string]interface{}{
+					"tags":        []string{"WebShell管理"},
+					"summary":     "更新WebShell连接",
+					"description": "更新已有的WebShell连接配置。",
+					"operationId": "updateWebshellConnection",
+					"parameters": []map[string]interface{}{
+						{"name": "id", "in": "path", "required": true, "description": "连接ID", "schema": map[string]interface{}{"type": "string"}},
+					},
+					"requestBody": map[string]interface{}{
+						"required": true,
+						"content": map[string]interface{}{
+							"application/json": map[string]interface{}{
+								"schema": map[string]interface{}{
+									"type": "object",
+									"properties": map[string]interface{}{
+										"url":       map[string]interface{}{"type": "string"},
+										"password":  map[string]interface{}{"type": "string"},
+										"type":      map[string]interface{}{"type": "string", "enum": []string{"php", "asp", "aspx", "jsp", "custom"}},
+										"method":    map[string]interface{}{"type": "string", "enum": []string{"get", "post"}},
+										"cmd_param": map[string]interface{}{"type": "string"},
+										"remark":    map[string]interface{}{"type": "string"},
+									},
+								},
+							},
+						},
+					},
+					"responses": map[string]interface{}{
+						"200": map[string]interface{}{"description": "更新成功"},
+						"401": map[string]interface{}{"description": "未授权"},
+						"404": map[string]interface{}{"description": "连接不存在"},
+					},
+				},
+				"delete": map[string]interface{}{
+					"tags":        []string{"WebShell管理"},
+					"summary":     "删除WebShell连接",
+					"description": "删除指定的WebShell连接配置。",
+					"operationId": "deleteWebshellConnection",
+					"parameters": []map[string]interface{}{
+						{"name": "id", "in": "path", "required": true, "description": "连接ID", "schema": map[string]interface{}{"type": "string"}},
+					},
+					"responses": map[string]interface{}{
+						"200": map[string]interface{}{"description": "删除成功"},
+						"401": map[string]interface{}{"description": "未授权"},
+						"404": map[string]interface{}{"description": "连接不存在"},
+					},
+				},
+			},
+			"/api/webshell/connections/{id}/state": map[string]interface{}{
+				"get": map[string]interface{}{
+					"tags":        []string{"WebShell管理"},
+					"summary":     "获取连接状态",
+					"description": "获取WebShell连接的保存状态数据。",
+					"operationId": "getWebshellConnectionState",
+					"parameters": []map[string]interface{}{
+						{"name": "id", "in": "path", "required": true, "description": "连接ID", "schema": map[string]interface{}{"type": "string"}},
+					},
+					"responses": map[string]interface{}{
+						"200": map[string]interface{}{
+							"description": "获取成功",
+							"content": map[string]interface{}{
+								"application/json": map[string]interface{}{
+									"schema": map[string]interface{}{
+										"type": "object",
+										"properties": map[string]interface{}{
+											"state": map[string]interface{}{"type": "object", "description": "状态数据（任意JSON）"},
+										},
+									},
+								},
+							},
+						},
+						"401": map[string]interface{}{"description": "未授权"},
+					},
+				},
+				"put": map[string]interface{}{
+					"tags":        []string{"WebShell管理"},
+					"summary":     "保存连接状态",
+					"description": "保存WebShell连接的状态数据。",
+					"operationId": "saveWebshellConnectionState",
+					"parameters": []map[string]interface{}{
+						{"name": "id", "in": "path", "required": true, "description": "连接ID", "schema": map[string]interface{}{"type": "string"}},
+					},
+					"requestBody": map[string]interface{}{
+						"required": true,
+						"content": map[string]interface{}{
+							"application/json": map[string]interface{}{
+								"schema": map[string]interface{}{
+									"type": "object",
+									"properties": map[string]interface{}{
+										"state": map[string]interface{}{"type": "object", "description": "状态数据（任意JSON）"},
+									},
+								},
+							},
+						},
+					},
+					"responses": map[string]interface{}{
+						"200": map[string]interface{}{"description": "保存成功"},
+						"401": map[string]interface{}{"description": "未授权"},
+					},
+				},
+			},
+			"/api/webshell/connections/{id}/ai-history": map[string]interface{}{
+				"get": map[string]interface{}{
+					"tags":        []string{"WebShell管理"},
+					"summary":     "获取AI对话历史",
+					"description": "获取指定WebShell连接的AI辅助对话历史消息。",
+					"operationId": "getWebshellAIHistory",
+					"parameters": []map[string]interface{}{
+						{"name": "id", "in": "path", "required": true, "description": "连接ID", "schema": map[string]interface{}{"type": "string"}},
+					},
+					"responses": map[string]interface{}{
+						"200": map[string]interface{}{
+							"description": "获取成功",
+							"content": map[string]interface{}{
+								"application/json": map[string]interface{}{
+									"schema": map[string]interface{}{
+										"type": "object",
+										"properties": map[string]interface{}{
+											"conversationId": map[string]interface{}{"type": "string"},
+											"messages": map[string]interface{}{
+												"type": "array",
+												"items": map[string]interface{}{
+													"type": "object",
+													"properties": map[string]interface{}{
+														"id":        map[string]interface{}{"type": "string"},
+														"role":      map[string]interface{}{"type": "string"},
+														"content":   map[string]interface{}{"type": "string"},
+														"createdAt": map[string]interface{}{"type": "string", "format": "date-time"},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						"401": map[string]interface{}{"description": "未授权"},
+					},
+				},
+			},
+			"/api/webshell/connections/{id}/ai-conversations": map[string]interface{}{
+				"get": map[string]interface{}{
+					"tags":        []string{"WebShell管理"},
+					"summary":     "列出AI对话",
+					"description": "获取指定WebShell连接的所有AI辅助对话列表。",
+					"operationId": "listWebshellAIConversations",
+					"parameters": []map[string]interface{}{
+						{"name": "id", "in": "path", "required": true, "description": "连接ID", "schema": map[string]interface{}{"type": "string"}},
+					},
+					"responses": map[string]interface{}{
+						"200": map[string]interface{}{
+							"description": "获取成功",
+							"content": map[string]interface{}{
+								"application/json": map[string]interface{}{
+									"schema": map[string]interface{}{
+										"type": "array",
+										"items": map[string]interface{}{
+											"type": "object",
+											"properties": map[string]interface{}{
+												"id":        map[string]interface{}{"type": "string"},
+												"title":     map[string]interface{}{"type": "string"},
+												"createdAt": map[string]interface{}{"type": "string", "format": "date-time"},
+											},
+										},
+									},
+								},
+							},
+						},
+						"401": map[string]interface{}{"description": "未授权"},
+					},
+				},
+			},
+			"/api/webshell/exec": map[string]interface{}{
+				"post": map[string]interface{}{
+					"tags":        []string{"WebShell管理"},
+					"summary":     "执行WebShell命令",
+					"description": "通过指定的WebShell连接执行远程命令。",
+					"operationId": "webshellExec",
+					"requestBody": map[string]interface{}{
+						"required": true,
+						"content": map[string]interface{}{
+							"application/json": map[string]interface{}{
+								"schema": map[string]interface{}{
+									"type": "object",
+									"required": []string{"url", "command"},
+									"properties": map[string]interface{}{
+										"url":       map[string]interface{}{"type": "string", "description": "WebShell URL"},
+										"password":  map[string]interface{}{"type": "string"},
+										"type":      map[string]interface{}{"type": "string", "enum": []string{"php", "asp", "aspx", "jsp", "custom"}},
+										"method":    map[string]interface{}{"type": "string", "enum": []string{"get", "post"}},
+										"cmd_param": map[string]interface{}{"type": "string"},
+										"command":   map[string]interface{}{"type": "string", "description": "要执行的命令"},
+									},
+								},
+							},
+						},
+					},
+					"responses": map[string]interface{}{
+						"200": map[string]interface{}{
+							"description": "执行结果",
+							"content": map[string]interface{}{
+								"application/json": map[string]interface{}{
+									"schema": map[string]interface{}{
+										"type": "object",
+										"properties": map[string]interface{}{
+											"ok":        map[string]interface{}{"type": "boolean"},
+											"output":    map[string]interface{}{"type": "string", "description": "命令输出"},
+											"error":     map[string]interface{}{"type": "string", "description": "错误信息"},
+											"http_code": map[string]interface{}{"type": "integer", "description": "HTTP响应码"},
+										},
+									},
+								},
+							},
+						},
+						"401": map[string]interface{}{"description": "未授权"},
+					},
+				},
+			},
+			"/api/webshell/file": map[string]interface{}{
+				"post": map[string]interface{}{
+					"tags":        []string{"WebShell管理"},
+					"summary":     "WebShell文件操作",
+					"description": "通过WebShell执行远程文件操作（列目录、读写文件、创建目录、重命名、删除、上传等）。",
+					"operationId": "webshellFileOp",
+					"requestBody": map[string]interface{}{
+						"required": true,
+						"content": map[string]interface{}{
+							"application/json": map[string]interface{}{
+								"schema": map[string]interface{}{
+									"type": "object",
+									"required": []string{"url", "action", "path"},
+									"properties": map[string]interface{}{
+										"url":         map[string]interface{}{"type": "string", "description": "WebShell URL"},
+										"password":    map[string]interface{}{"type": "string"},
+										"type":        map[string]interface{}{"type": "string", "enum": []string{"php", "asp", "aspx", "jsp", "custom"}},
+										"method":      map[string]interface{}{"type": "string", "enum": []string{"get", "post"}},
+										"cmd_param":   map[string]interface{}{"type": "string"},
+										"action":      map[string]interface{}{"type": "string", "description": "操作类型", "enum": []string{"list", "read", "delete", "write", "mkdir", "rename", "upload", "upload_chunk"}},
+										"path":        map[string]interface{}{"type": "string", "description": "目标文件/目录路径"},
+										"target_path": map[string]interface{}{"type": "string", "description": "目标路径（rename时使用）"},
+										"content":     map[string]interface{}{"type": "string", "description": "文件内容（write/upload时使用）"},
+										"chunk_index": map[string]interface{}{"type": "integer", "description": "分块索引（upload_chunk时使用）"},
+									},
+								},
+							},
+						},
+					},
+					"responses": map[string]interface{}{
+						"200": map[string]interface{}{
+							"description": "操作结果",
+							"content": map[string]interface{}{
+								"application/json": map[string]interface{}{
+									"schema": map[string]interface{}{
+										"type": "object",
+										"properties": map[string]interface{}{
+											"ok":     map[string]interface{}{"type": "boolean"},
+											"output": map[string]interface{}{"type": "string"},
+											"error":  map[string]interface{}{"type": "string"},
+										},
+									},
+								},
+							},
+						},
+						"401": map[string]interface{}{"description": "未授权"},
+					},
+				},
+			},
+
+			// ==================== 对话附件 ====================
+			"/api/chat-uploads": map[string]interface{}{
+				"get": map[string]interface{}{
+					"tags":        []string{"对话附件"},
+					"summary":     "列出附件",
+					"description": "获取对话附件文件列表，可按对话ID过滤。",
+					"operationId": "listChatUploads",
+					"parameters": []map[string]interface{}{
+						{"name": "conversation", "in": "query", "required": false, "description": "按对话ID过滤", "schema": map[string]interface{}{"type": "string"}},
+					},
+					"responses": map[string]interface{}{
+						"200": map[string]interface{}{
+							"description": "获取成功",
+							"content": map[string]interface{}{
+								"application/json": map[string]interface{}{
+									"schema": map[string]interface{}{
+										"type": "object",
+										"properties": map[string]interface{}{
+											"files": map[string]interface{}{
+												"type": "array",
+												"items": map[string]interface{}{
+													"type": "object",
+													"properties": map[string]interface{}{
+														"relativePath":  map[string]interface{}{"type": "string"},
+														"absolutePath":  map[string]interface{}{"type": "string"},
+														"name":          map[string]interface{}{"type": "string"},
+														"size":          map[string]interface{}{"type": "integer"},
+														"modifiedUnix":  map[string]interface{}{"type": "integer"},
+														"date":          map[string]interface{}{"type": "string"},
+														"conversationId": map[string]interface{}{"type": "string"},
+														"subPath":       map[string]interface{}{"type": "string"},
+													},
+												},
+											},
+											"folders": map[string]interface{}{"type": "array", "items": map[string]interface{}{"type": "string"}},
+										},
+									},
+								},
+							},
+						},
+						"401": map[string]interface{}{"description": "未授权"},
+					},
+				},
+				"post": map[string]interface{}{
+					"tags":        []string{"对话附件"},
+					"summary":     "上传附件",
+					"description": "上传文件到对话附件目录（multipart/form-data）。",
+					"operationId": "uploadChatFile",
+					"requestBody": map[string]interface{}{
+						"required": true,
+						"content": map[string]interface{}{
+							"multipart/form-data": map[string]interface{}{
+								"schema": map[string]interface{}{
+									"type": "object",
+									"required": []string{"file"},
+									"properties": map[string]interface{}{
+										"file":           map[string]interface{}{"type": "string", "format": "binary", "description": "上传的文件"},
+										"conversationId": map[string]interface{}{"type": "string", "description": "关联的对话ID（可选）"},
+										"relativeDir":    map[string]interface{}{"type": "string", "description": "目标目录相对路径（可选）"},
+									},
+								},
+							},
+						},
+					},
+					"responses": map[string]interface{}{
+						"200": map[string]interface{}{
+							"description": "上传成功",
+							"content": map[string]interface{}{
+								"application/json": map[string]interface{}{
+									"schema": map[string]interface{}{
+										"type": "object",
+										"properties": map[string]interface{}{
+											"ok":           map[string]interface{}{"type": "boolean"},
+											"relativePath": map[string]interface{}{"type": "string"},
+											"absolutePath": map[string]interface{}{"type": "string"},
+											"name":         map[string]interface{}{"type": "string"},
+										},
+									},
+								},
+							},
+						},
+						"401": map[string]interface{}{"description": "未授权"},
+					},
+				},
+				"delete": map[string]interface{}{
+					"tags":        []string{"对话附件"},
+					"summary":     "删除附件",
+					"description": "删除指定的对话附件文件。",
+					"operationId": "deleteChatUpload",
+					"requestBody": map[string]interface{}{
+						"required": true,
+						"content": map[string]interface{}{
+							"application/json": map[string]interface{}{
+								"schema": map[string]interface{}{
+									"type": "object",
+									"required": []string{"path"},
+									"properties": map[string]interface{}{
+										"path": map[string]interface{}{"type": "string", "description": "文件相对路径"},
+									},
+								},
+							},
+						},
+					},
+					"responses": map[string]interface{}{
+						"200": map[string]interface{}{"description": "删除成功"},
+						"401": map[string]interface{}{"description": "未授权"},
+					},
+				},
+			},
+			"/api/chat-uploads/download": map[string]interface{}{
+				"get": map[string]interface{}{
+					"tags":        []string{"对话附件"},
+					"summary":     "下载附件",
+					"description": "下载指定的对话附件文件。",
+					"operationId": "downloadChatUpload",
+					"parameters": []map[string]interface{}{
+						{"name": "path", "in": "query", "required": true, "description": "文件相对路径", "schema": map[string]interface{}{"type": "string"}},
+					},
+					"responses": map[string]interface{}{
+						"200": map[string]interface{}{
+							"description": "文件下载",
+							"content": map[string]interface{}{
+								"application/octet-stream": map[string]interface{}{
+									"schema": map[string]interface{}{"type": "string", "format": "binary"},
+								},
+							},
+						},
+						"401": map[string]interface{}{"description": "未授权"},
+						"404": map[string]interface{}{"description": "文件不存在"},
+					},
+				},
+			},
+			"/api/chat-uploads/content": map[string]interface{}{
+				"get": map[string]interface{}{
+					"tags":        []string{"对话附件"},
+					"summary":     "获取附件文本内容",
+					"description": "读取并返回文本文件的内容。",
+					"operationId": "getChatUploadContent",
+					"parameters": []map[string]interface{}{
+						{"name": "path", "in": "query", "required": true, "description": "文件相对路径", "schema": map[string]interface{}{"type": "string"}},
+					},
+					"responses": map[string]interface{}{
+						"200": map[string]interface{}{
+							"description": "获取成功",
+							"content": map[string]interface{}{
+								"application/json": map[string]interface{}{
+									"schema": map[string]interface{}{
+										"type": "object",
+										"properties": map[string]interface{}{
+											"content": map[string]interface{}{"type": "string", "description": "文件文本内容"},
+										},
+									},
+								},
+							},
+						},
+						"401": map[string]interface{}{"description": "未授权"},
+						"404": map[string]interface{}{"description": "文件不存在"},
+					},
+				},
+				"put": map[string]interface{}{
+					"tags":        []string{"对话附件"},
+					"summary":     "写入附件文本内容",
+					"description": "写入或覆盖文本文件的内容。",
+					"operationId": "putChatUploadContent",
+					"requestBody": map[string]interface{}{
+						"required": true,
+						"content": map[string]interface{}{
+							"application/json": map[string]interface{}{
+								"schema": map[string]interface{}{
+									"type": "object",
+									"required": []string{"path", "content"},
+									"properties": map[string]interface{}{
+										"path":    map[string]interface{}{"type": "string", "description": "文件相对路径"},
+										"content": map[string]interface{}{"type": "string", "description": "文件文本内容"},
+									},
+								},
+							},
+						},
+					},
+					"responses": map[string]interface{}{
+						"200": map[string]interface{}{"description": "写入成功"},
+						"401": map[string]interface{}{"description": "未授权"},
+					},
+				},
+			},
+			"/api/chat-uploads/mkdir": map[string]interface{}{
+				"post": map[string]interface{}{
+					"tags":        []string{"对话附件"},
+					"summary":     "创建附件目录",
+					"description": "在对话附件目录下创建子目录。",
+					"operationId": "mkdirChatUpload",
+					"requestBody": map[string]interface{}{
+						"required": true,
+						"content": map[string]interface{}{
+							"application/json": map[string]interface{}{
+								"schema": map[string]interface{}{
+									"type": "object",
+									"required": []string{"name"},
+									"properties": map[string]interface{}{
+										"parent": map[string]interface{}{"type": "string", "description": "父目录相对路径"},
+										"name":   map[string]interface{}{"type": "string", "description": "目录名称"},
+									},
+								},
+							},
+						},
+					},
+					"responses": map[string]interface{}{
+						"200": map[string]interface{}{
+							"description": "创建成功",
+							"content": map[string]interface{}{
+								"application/json": map[string]interface{}{
+									"schema": map[string]interface{}{
+										"type": "object",
+										"properties": map[string]interface{}{
+											"ok":           map[string]interface{}{"type": "boolean"},
+											"relativePath": map[string]interface{}{"type": "string"},
+										},
+									},
+								},
+							},
+						},
+						"401": map[string]interface{}{"description": "未授权"},
+					},
+				},
+			},
+			"/api/chat-uploads/rename": map[string]interface{}{
+				"put": map[string]interface{}{
+					"tags":        []string{"对话附件"},
+					"summary":     "重命名附件",
+					"description": "重命名对话附件文件或目录。",
+					"operationId": "renameChatUpload",
+					"requestBody": map[string]interface{}{
+						"required": true,
+						"content": map[string]interface{}{
+							"application/json": map[string]interface{}{
+								"schema": map[string]interface{}{
+									"type": "object",
+									"required": []string{"path", "newName"},
+									"properties": map[string]interface{}{
+										"path":    map[string]interface{}{"type": "string", "description": "当前文件相对路径"},
+										"newName": map[string]interface{}{"type": "string", "description": "新名称"},
+									},
+								},
+							},
+						},
+					},
+					"responses": map[string]interface{}{
+						"200": map[string]interface{}{
+							"description": "重命名成功",
+							"content": map[string]interface{}{
+								"application/json": map[string]interface{}{
+									"schema": map[string]interface{}{
+										"type": "object",
+										"properties": map[string]interface{}{
+											"ok":           map[string]interface{}{"type": "boolean"},
+											"relativePath": map[string]interface{}{"type": "string"},
+										},
+									},
+								},
+							},
+						},
+						"401": map[string]interface{}{"description": "未授权"},
+					},
+				},
+			},
+
+			// ==================== 机器人集成 ====================
+			"/api/robot/wecom": map[string]interface{}{
+				"get": map[string]interface{}{
+					"tags":        []string{"机器人集成"},
+					"summary":     "企业微信回调验证",
+					"description": "企业微信服务器URL验证回调（用于配置消息接收地址时的验证）。无需认证。",
+					"operationId": "wecomCallbackVerify",
+					"security":    []map[string]interface{}{},
+					"parameters": []map[string]interface{}{
+						{"name": "msg_signature", "in": "query", "required": true, "schema": map[string]interface{}{"type": "string"}},
+						{"name": "timestamp", "in": "query", "required": true, "schema": map[string]interface{}{"type": "string"}},
+						{"name": "nonce", "in": "query", "required": true, "schema": map[string]interface{}{"type": "string"}},
+						{"name": "echostr", "in": "query", "required": true, "schema": map[string]interface{}{"type": "string"}},
+					},
+					"responses": map[string]interface{}{
+						"200": map[string]interface{}{"description": "验证成功，返回解密后的echostr"},
+					},
+				},
+				"post": map[string]interface{}{
+					"tags":        []string{"机器人集成"},
+					"summary":     "企业微信消息回调",
+					"description": "接收企业微信推送的消息事件。无需认证，由企业微信服务器调用。",
+					"operationId": "wecomCallbackMessage",
+					"security":    []map[string]interface{}{},
+					"responses": map[string]interface{}{
+						"200": map[string]interface{}{"description": "处理成功"},
+					},
+				},
+			},
+			"/api/robot/dingtalk": map[string]interface{}{
+				"post": map[string]interface{}{
+					"tags":        []string{"机器人集成"},
+					"summary":     "钉钉消息回调",
+					"description": "接收钉钉推送的消息事件。无需认证，由钉钉服务器调用。",
+					"operationId": "dingtalkCallback",
+					"security":    []map[string]interface{}{},
+					"responses": map[string]interface{}{
+						"200": map[string]interface{}{"description": "处理成功"},
+					},
+				},
+			},
+			"/api/robot/lark": map[string]interface{}{
+				"post": map[string]interface{}{
+					"tags":        []string{"机器人集成"},
+					"summary":     "飞书消息回调",
+					"description": "接收飞书推送的消息事件。无需认证，由飞书服务器调用。",
+					"operationId": "larkCallback",
+					"security":    []map[string]interface{}{},
+					"responses": map[string]interface{}{
+						"200": map[string]interface{}{"description": "处理成功"},
+					},
+				},
+			},
+			"/api/robot/test": map[string]interface{}{
+				"post": map[string]interface{}{
+					"tags":        []string{"机器人集成"},
+					"summary":     "测试机器人消息处理",
+					"description": "模拟机器人消息处理流程，用于调试和验证。需要登录认证。",
+					"operationId": "testRobot",
+					"requestBody": map[string]interface{}{
+						"required": true,
+						"content": map[string]interface{}{
+							"application/json": map[string]interface{}{
+								"schema": map[string]interface{}{
+									"type": "object",
+									"required": []string{"platform", "text"},
+									"properties": map[string]interface{}{
+										"platform": map[string]interface{}{"type": "string", "description": "平台类型", "enum": []string{"dingtalk", "lark", "wecom"}},
+										"user_id":  map[string]interface{}{"type": "string", "description": "模拟用户ID", "example": "test"},
+										"text":     map[string]interface{}{"type": "string", "description": "消息文本", "example": "帮助"},
+									},
+								},
+							},
+						},
+					},
+					"responses": map[string]interface{}{
+						"200": map[string]interface{}{"description": "处理成功"},
+						"401": map[string]interface{}{"description": "未授权"},
+					},
+				},
+			},
+
+			// ==================== 多代理Markdown ====================
+			"/api/multi-agent/markdown-agents": map[string]interface{}{
+				"get": map[string]interface{}{
+					"tags":        []string{"多代理Markdown"},
+					"summary":     "列出Markdown代理",
+					"description": "获取所有多代理Markdown定义文件列表。",
+					"operationId": "listMarkdownAgents",
+					"responses": map[string]interface{}{
+						"200": map[string]interface{}{
+							"description": "获取成功",
+							"content": map[string]interface{}{
+								"application/json": map[string]interface{}{
+									"schema": map[string]interface{}{
+										"type": "object",
+										"properties": map[string]interface{}{
+											"agents": map[string]interface{}{
+												"type": "array",
+												"items": map[string]interface{}{
+													"type": "object",
+													"properties": map[string]interface{}{
+														"filename":        map[string]interface{}{"type": "string", "description": "文件名"},
+														"id":              map[string]interface{}{"type": "string", "description": "代理ID"},
+														"name":            map[string]interface{}{"type": "string", "description": "代理名称"},
+														"description":     map[string]interface{}{"type": "string", "description": "代理描述"},
+														"is_orchestrator": map[string]interface{}{"type": "boolean", "description": "是否为编排器"},
+														"kind":            map[string]interface{}{"type": "string", "description": "编排类型"},
+													},
+												},
+											},
+											"dir": map[string]interface{}{"type": "string", "description": "代理定义目录路径"},
+										},
+									},
+								},
+							},
+						},
+						"401": map[string]interface{}{"description": "未授权"},
+					},
+				},
+				"post": map[string]interface{}{
+					"tags":        []string{"多代理Markdown"},
+					"summary":     "创建Markdown代理",
+					"description": "创建新的多代理Markdown定义文件。",
+					"operationId": "createMarkdownAgent",
+					"requestBody": map[string]interface{}{
+						"required": true,
+						"content": map[string]interface{}{
+							"application/json": map[string]interface{}{
+								"schema": map[string]interface{}{
+									"type": "object",
+									"required": []string{"name"},
+									"properties": map[string]interface{}{
+										"filename":       map[string]interface{}{"type": "string", "description": "文件名（可选，自动生成）"},
+										"id":             map[string]interface{}{"type": "string", "description": "代理ID"},
+										"name":           map[string]interface{}{"type": "string", "description": "代理名称"},
+										"description":    map[string]interface{}{"type": "string", "description": "代理描述"},
+										"tools":          map[string]interface{}{"type": "array", "items": map[string]interface{}{"type": "string"}, "description": "可用工具列表"},
+										"instruction":    map[string]interface{}{"type": "string", "description": "代理指令"},
+										"bind_role":      map[string]interface{}{"type": "string", "description": "绑定角色"},
+										"max_iterations": map[string]interface{}{"type": "integer", "description": "最大迭代次数"},
+										"kind":           map[string]interface{}{"type": "string", "description": "编排类型"},
+										"raw":            map[string]interface{}{"type": "string", "description": "原始Markdown内容"},
+									},
+								},
+							},
+						},
+					},
+					"responses": map[string]interface{}{
+						"200": map[string]interface{}{
+							"description": "创建成功",
+							"content": map[string]interface{}{
+								"application/json": map[string]interface{}{
+									"schema": map[string]interface{}{
+										"type": "object",
+										"properties": map[string]interface{}{
+											"filename": map[string]interface{}{"type": "string"},
+											"message":  map[string]interface{}{"type": "string", "example": "已创建"},
+										},
+									},
+								},
+							},
+						},
+						"400": map[string]interface{}{"description": "参数错误"},
+						"401": map[string]interface{}{"description": "未授权"},
+					},
+				},
+			},
+			"/api/multi-agent/markdown-agents/{filename}": map[string]interface{}{
+				"get": map[string]interface{}{
+					"tags":        []string{"多代理Markdown"},
+					"summary":     "获取Markdown代理详情",
+					"description": "获取指定Markdown代理定义文件的详细内容。",
+					"operationId": "getMarkdownAgent",
+					"parameters": []map[string]interface{}{
+						{"name": "filename", "in": "path", "required": true, "description": "文件名", "schema": map[string]interface{}{"type": "string"}},
+					},
+					"responses": map[string]interface{}{
+						"200": map[string]interface{}{
+							"description": "获取成功",
+							"content": map[string]interface{}{
+								"application/json": map[string]interface{}{
+									"schema": map[string]interface{}{
+										"type": "object",
+										"properties": map[string]interface{}{
+											"filename":        map[string]interface{}{"type": "string"},
+											"raw":             map[string]interface{}{"type": "string", "description": "原始Markdown内容"},
+											"id":              map[string]interface{}{"type": "string"},
+											"name":            map[string]interface{}{"type": "string"},
+											"description":     map[string]interface{}{"type": "string"},
+											"tools":           map[string]interface{}{"type": "array", "items": map[string]interface{}{"type": "string"}},
+											"instruction":     map[string]interface{}{"type": "string"},
+											"bind_role":       map[string]interface{}{"type": "string"},
+											"max_iterations":  map[string]interface{}{"type": "integer"},
+											"kind":            map[string]interface{}{"type": "string"},
+											"is_orchestrator": map[string]interface{}{"type": "boolean"},
+										},
+									},
+								},
+							},
+						},
+						"401": map[string]interface{}{"description": "未授权"},
+						"404": map[string]interface{}{"description": "代理不存在"},
+					},
+				},
+				"put": map[string]interface{}{
+					"tags":        []string{"多代理Markdown"},
+					"summary":     "更新Markdown代理",
+					"description": "更新指定的Markdown代理定义。",
+					"operationId": "updateMarkdownAgent",
+					"parameters": []map[string]interface{}{
+						{"name": "filename", "in": "path", "required": true, "description": "文件名", "schema": map[string]interface{}{"type": "string"}},
+					},
+					"requestBody": map[string]interface{}{
+						"required": true,
+						"content": map[string]interface{}{
+							"application/json": map[string]interface{}{
+								"schema": map[string]interface{}{
+									"type": "object",
+									"properties": map[string]interface{}{
+										"name":           map[string]interface{}{"type": "string"},
+										"description":    map[string]interface{}{"type": "string"},
+										"tools":          map[string]interface{}{"type": "array", "items": map[string]interface{}{"type": "string"}},
+										"instruction":    map[string]interface{}{"type": "string"},
+										"bind_role":      map[string]interface{}{"type": "string"},
+										"max_iterations": map[string]interface{}{"type": "integer"},
+										"kind":           map[string]interface{}{"type": "string"},
+										"raw":            map[string]interface{}{"type": "string"},
+									},
+								},
+							},
+						},
+					},
+					"responses": map[string]interface{}{
+						"200": map[string]interface{}{
+							"description": "更新成功",
+							"content": map[string]interface{}{
+								"application/json": map[string]interface{}{
+									"schema": map[string]interface{}{
+										"type": "object",
+										"properties": map[string]interface{}{
+											"message": map[string]interface{}{"type": "string", "example": "已保存"},
+										},
+									},
+								},
+							},
+						},
+						"401": map[string]interface{}{"description": "未授权"},
+						"404": map[string]interface{}{"description": "代理不存在"},
+					},
+				},
+				"delete": map[string]interface{}{
+					"tags":        []string{"多代理Markdown"},
+					"summary":     "删除Markdown代理",
+					"description": "删除指定的Markdown代理定义文件。",
+					"operationId": "deleteMarkdownAgent",
+					"parameters": []map[string]interface{}{
+						{"name": "filename", "in": "path", "required": true, "description": "文件名", "schema": map[string]interface{}{"type": "string"}},
+					},
+					"responses": map[string]interface{}{
+						"200": map[string]interface{}{
+							"description": "删除成功",
+							"content": map[string]interface{}{
+								"application/json": map[string]interface{}{
+									"schema": map[string]interface{}{
+										"type": "object",
+										"properties": map[string]interface{}{
+											"message": map[string]interface{}{"type": "string", "example": "已删除"},
+										},
+									},
+								},
+							},
+						},
+						"401": map[string]interface{}{"description": "未授权"},
+						"404": map[string]interface{}{"description": "代理不存在"},
+					},
+				},
+			},
+
+			// ==================== Skills管理 - 缺失端点 ====================
+			"/api/skills/{name}/files": map[string]interface{}{
+				"get": map[string]interface{}{
+					"tags":        []string{"Skills管理"},
+					"summary":     "列出技能包文件",
+					"description": "获取指定技能包目录下的所有文件列表。",
+					"operationId": "listSkillPackageFiles",
+					"parameters": []map[string]interface{}{
+						{"name": "name", "in": "path", "required": true, "description": "技能名称/ID", "schema": map[string]interface{}{"type": "string"}},
+					},
+					"responses": map[string]interface{}{
+						"200": map[string]interface{}{
+							"description": "获取成功",
+							"content": map[string]interface{}{
+								"application/json": map[string]interface{}{
+									"schema": map[string]interface{}{
+										"type": "object",
+										"properties": map[string]interface{}{
+											"files": map[string]interface{}{"type": "array", "items": map[string]interface{}{"type": "string"}, "description": "文件路径列表"},
+										},
+									},
+								},
+							},
+						},
+						"401": map[string]interface{}{"description": "未授权"},
+						"404": map[string]interface{}{"description": "技能不存在"},
+					},
+				},
+			},
+			"/api/skills/{name}/file": map[string]interface{}{
+				"get": map[string]interface{}{
+					"tags":        []string{"Skills管理"},
+					"summary":     "获取技能包文件内容",
+					"description": "读取技能包中指定文件的内容。",
+					"operationId": "getSkillPackageFile",
+					"parameters": []map[string]interface{}{
+						{"name": "name", "in": "path", "required": true, "description": "技能名称/ID", "schema": map[string]interface{}{"type": "string"}},
+						{"name": "path", "in": "query", "required": true, "description": "文件相对路径", "schema": map[string]interface{}{"type": "string"}},
+					},
+					"responses": map[string]interface{}{
+						"200": map[string]interface{}{
+							"description": "获取成功",
+							"content": map[string]interface{}{
+								"application/json": map[string]interface{}{
+									"schema": map[string]interface{}{
+										"type": "object",
+										"properties": map[string]interface{}{
+											"path":    map[string]interface{}{"type": "string", "description": "文件路径"},
+											"content": map[string]interface{}{"type": "string", "description": "文件内容"},
+										},
+									},
+								},
+							},
+						},
+						"401": map[string]interface{}{"description": "未授权"},
+						"404": map[string]interface{}{"description": "文件不存在"},
+					},
+				},
+				"put": map[string]interface{}{
+					"tags":        []string{"Skills管理"},
+					"summary":     "写入技能包文件",
+					"description": "写入或更新技能包中的文件内容。",
+					"operationId": "putSkillPackageFile",
+					"parameters": []map[string]interface{}{
+						{"name": "name", "in": "path", "required": true, "description": "技能名称/ID", "schema": map[string]interface{}{"type": "string"}},
+					},
+					"requestBody": map[string]interface{}{
+						"required": true,
+						"content": map[string]interface{}{
+							"application/json": map[string]interface{}{
+								"schema": map[string]interface{}{
+									"type": "object",
+									"required": []string{"path"},
+									"properties": map[string]interface{}{
+										"path":    map[string]interface{}{"type": "string", "description": "文件相对路径"},
+										"content": map[string]interface{}{"type": "string", "description": "文件内容"},
+									},
+								},
+							},
+						},
+					},
+					"responses": map[string]interface{}{
+						"200": map[string]interface{}{
+							"description": "保存成功",
+							"content": map[string]interface{}{
+								"application/json": map[string]interface{}{
+									"schema": map[string]interface{}{
+										"type": "object",
+										"properties": map[string]interface{}{
+											"message": map[string]interface{}{"type": "string", "example": "saved"},
+											"path":    map[string]interface{}{"type": "string"},
+										},
+									},
+								},
+							},
+						},
+						"401": map[string]interface{}{"description": "未授权"},
+					},
+				},
+			},
+
+			// ==================== 监控 - 缺失端点 ====================
+			"/api/monitor/executions/names": map[string]interface{}{
+				"post": map[string]interface{}{
+					"tags":        []string{"监控"},
+					"summary":     "批量获取工具名称",
+					"description": "根据执行ID列表批量获取对应的工具名称，消除前端N+1请求问题。",
+					"operationId": "batchGetToolNames",
+					"requestBody": map[string]interface{}{
+						"required": true,
+						"content": map[string]interface{}{
+							"application/json": map[string]interface{}{
+								"schema": map[string]interface{}{
+									"type": "object",
+									"required": []string{"ids"},
+									"properties": map[string]interface{}{
+										"ids": map[string]interface{}{
+											"type":        "array",
+											"items":       map[string]interface{}{"type": "string"},
+											"description": "执行记录ID列表",
+										},
+									},
+								},
+							},
+						},
+					},
+					"responses": map[string]interface{}{
+						"200": map[string]interface{}{
+							"description": "获取成功，返回ID到工具名称的映射",
+							"content": map[string]interface{}{
+								"application/json": map[string]interface{}{
+									"schema": map[string]interface{}{
+										"type":                 "object",
+										"additionalProperties": map[string]interface{}{"type": "string"},
+										"description":          "键为执行ID，值为工具名称",
+										"example":              map[string]interface{}{"exec-001": "nmap", "exec-002": "sqlmap"},
+									},
+								},
+							},
+						},
+						"400": map[string]interface{}{"description": "参数错误"},
+						"401": map[string]interface{}{"description": "未授权"},
+					},
+				},
+			},
+
+			// ==================== 知识库 - 缺失端点 ====================
+			"/api/knowledge/stats": map[string]interface{}{
+				"get": map[string]interface{}{
+					"tags":        []string{"知识库"},
+					"summary":     "获取知识库统计",
+					"description": "获取知识库的总体统计信息，包括分类数和条目数。",
+					"operationId": "getKnowledgeStats",
+					"responses": map[string]interface{}{
+						"200": map[string]interface{}{
+							"description": "获取成功",
+							"content": map[string]interface{}{
+								"application/json": map[string]interface{}{
+									"schema": map[string]interface{}{
+										"type": "object",
+										"properties": map[string]interface{}{
+											"enabled":          map[string]interface{}{"type": "boolean", "description": "知识库是否启用"},
+											"total_categories": map[string]interface{}{"type": "integer", "description": "分类总数"},
+											"total_items":      map[string]interface{}{"type": "integer", "description": "条目总数"},
+										},
+									},
+								},
+							},
+						},
+						"401": map[string]interface{}{"description": "未授权"},
+					},
+				},
+			},
+
 			"/api/mcp": map[string]interface{}{
 				"post": map[string]interface{}{
 					"tags":        []string{"MCP"},
