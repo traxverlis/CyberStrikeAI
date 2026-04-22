@@ -134,8 +134,6 @@ async function loadConfig(loadTools = true) {
             const v = ma.plan_execute_loop_max_iterations;
             maPeLoop.value = (v !== undefined && v !== null && !Number.isNaN(Number(v))) ? String(Number(v)) : '0';
         }
-        const maMode = document.getElementById('multi-agent-default-mode');
-        if (maMode) maMode.value = (ma.default_mode === 'multi') ? 'multi' : 'single';
         const maRobot = document.getElementById('multi-agent-robot-use');
         if (maRobot) maRobot.checked = ma.robot_use_multi_agent === true;
         
@@ -1012,7 +1010,6 @@ async function applySettings() {
                 const peLoop = Number.isNaN(peParsed) ? 0 : Math.max(0, peParsed);
                 return {
                     enabled: document.getElementById('multi-agent-enabled')?.checked === true,
-                    default_mode: document.getElementById('multi-agent-default-mode')?.value === 'multi' ? 'multi' : 'single',
                     robot_use_multi_agent: document.getElementById('multi-agent-robot-use')?.checked === true,
                     batch_use_multi_agent: false,
                     plan_execute_loop_max_iterations: peLoop

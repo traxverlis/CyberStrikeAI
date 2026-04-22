@@ -66,8 +66,7 @@ function chatAgentModeNormalizeStored(stored, cfg) {
     if (chatAgentModeIsEino(s)) {
         return multiOn ? s : CHAT_AGENT_MODE_REACT;
     }
-    const defMulti = pub && pub.default_mode === 'multi';
-    return defMulti && multiOn ? defOrch : CHAT_AGENT_MODE_REACT;
+    return CHAT_AGENT_MODE_REACT;
 }
 
 if (typeof window !== 'undefined') {
