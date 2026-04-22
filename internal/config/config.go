@@ -37,9 +37,8 @@ type Config struct {
 
 // MultiAgentConfig 基于 CloudWeGo Eino adk/prebuilt 的多代理编排（deep | plan_execute | supervisor，与单 Agent /agent-loop 并存）。
 type MultiAgentConfig struct {
-	Enabled            bool   `yaml:"enabled" json:"enabled"`
-	DefaultMode        string `yaml:"default_mode" json:"default_mode"`                   // single | multi，供前端默认展示
-	RobotUseMultiAgent bool   `yaml:"robot_use_multi_agent" json:"robot_use_multi_agent"` // 为 true 时钉钉/飞书/企微机器人走 Eino 多代理
+	Enabled            bool `yaml:"enabled" json:"enabled"`
+	RobotUseMultiAgent bool `yaml:"robot_use_multi_agent" json:"robot_use_multi_agent"` // 为 true 时钉钉/飞书/企微机器人走 Eino 多代理
 	BatchUseMultiAgent bool   `yaml:"batch_use_multi_agent" json:"batch_use_multi_agent"` // 为 true 时批量任务队列中每子任务走 Eino 多代理
 	// Orchestration 已弃用：保留仅兼容旧版 config.yaml；编排由聊天/WebShell 请求体 orchestration 决定，未传时按 deep。
 	Orchestration string `yaml:"orchestration,omitempty" json:"orchestration,omitempty"`
@@ -128,9 +127,8 @@ type MultiAgentSubConfig struct {
 
 // MultiAgentPublic 返回给前端的精简信息（不含子代理指令全文）。
 type MultiAgentPublic struct {
-	Enabled                      bool   `json:"enabled"`
-	DefaultMode                  string `json:"default_mode"`
-	RobotUseMultiAgent           bool   `json:"robot_use_multi_agent"`
+	Enabled                      bool `json:"enabled"`
+	RobotUseMultiAgent           bool `json:"robot_use_multi_agent"`
 	BatchUseMultiAgent           bool   `json:"batch_use_multi_agent"`
 	SubAgentCount                int    `json:"sub_agent_count"`
 	Orchestration                string `json:"orchestration,omitempty"`
@@ -152,9 +150,8 @@ func NormalizeMultiAgentOrchestration(s string) string {
 
 // MultiAgentAPIUpdate 设置页/API 仅更新多代理标量字段；写入 YAML 时不覆盖 sub_agents 等块。
 type MultiAgentAPIUpdate struct {
-	Enabled                      bool   `json:"enabled"`
-	DefaultMode                  string `json:"default_mode"`
-	RobotUseMultiAgent           bool   `json:"robot_use_multi_agent"`
+	Enabled                      bool `json:"enabled"`
+	RobotUseMultiAgent           bool `json:"robot_use_multi_agent"`
 	BatchUseMultiAgent           bool   `json:"batch_use_multi_agent"`
 	PlanExecuteLoopMaxIterations *int   `json:"plan_execute_loop_max_iterations,omitempty"`
 }
